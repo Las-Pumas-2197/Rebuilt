@@ -46,7 +46,10 @@ public class RobotContainer {
 
     // autos
     m_autochooser.setDefaultOption("no auto", print("WARNING: no auto scheduled"));
+    // m_autochooser.setDefaultOption("simple square", simpleSquareAuto());
+
     m_autochooser.addOption("autoalign reef A", autoAlignReef(18));
+    m_autochooser.addOption("simple square", simpleSquareAuto());
     SmartDashboard.putData(m_autochooser);
 
     // default commands for subsystems
@@ -91,6 +94,15 @@ public class RobotContainer {
     return new SequentialCommandGroup(
         m_swerve.pathfindToPose(k_bluereefA, true),
         m_swerve.pathfindToPose(k_redreefA, true));
+  }
+
+  /** Simple square pattern auto - drives robot in a 2m x 2m square. */
+  private SequentialCommandGroup simpleSquareAuto() {
+    return new SequentialCommandGroup(
+        m_swerve.pathfindToPose(k_squarePoint1, false),
+        m_swerve.pathfindToPose(k_squarePoint2, false),
+        m_swerve.pathfindToPose(k_squarePoint3, false),
+        m_swerve.pathfindToPose(k_squarePoint4, false));
   }
 
   /** The selected autonomous command. */
