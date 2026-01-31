@@ -16,7 +16,7 @@
   "robotTrackwidth": 0.762,
   "driveWheelRadius": 0.051,
   "driveGearing": 5.27,
-  "maxDriveSpeed": 6.21,
+  "maxDriveSpeed": 8.0,
   "driveMotorType": "vortex",
   "driveCurrentLimit": 60.0,
   "wheelCOF": 1.2,

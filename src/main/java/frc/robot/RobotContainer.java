@@ -70,6 +70,7 @@ public class RobotContainer {
   private void configureBindings() {
     m_joystick.back().onTrue(runOnce(() -> m_swerve.getCurrentCommand().cancel()));
     m_joystick.start().whileTrue(run(() -> BlackBox.DataRecorder.recordData("heading", m_swerve.getGyroHeading())));
+    m_joystick.a().onTrue(createCycleCommand());
   }
 
   /**
@@ -156,6 +157,68 @@ public class RobotContainer {
   private Command simpleDriveTest() {
     return run(() -> m_swerve.drive(new ChassisSpeeds(1.0, 0, 0)), m_swerve)
         .withTimeout(2.0);
+  }
+
+  // Tunnel tag pairs: each tunnel has a tag on each end
+  // North tunnel: 22 <-> 23, South tunnel: 28 <-> 17
+  private static final java.util.Map<Integer, Integer> TUNNEL_PAIRS = java.util.Map.of(
+      22, 23,
+      23, 22,
+      28, 17,
+      17, 28
+  );
+
+  /**
+   * Creates a command that crosses through the closest tunnel to the other side.
+   * Finds the nearest tunnel entrance and pathfinds to the exit on the other side.
+   */
+  private Command createCycleCommand() {
+    return defer(() -> {
+      Pose2d currentPose = m_swerve.getPose();
+
+      // Find the closest tunnel entrance (closest tag)
+      int closestTag = -1;
+      double closestDist = Double.MAX_VALUE;
+
+      for (int tagId : TUNNEL_PAIRS.keySet()) {
+        var tagPose = k_fieldlayout.getTagPose(tagId);
+        if (tagPose.isPresent()) {
+          double dist = currentPose.getTranslation().getDistance(tagPose.get().toPose2d().getTranslation());
+          if (dist < closestDist) {
+            closestDist = dist;
+            closestTag = tagId;
+          }
+        }
+      }
+
+      if (closestTag == -1) {
+        return print("ERROR: Could not find any tunnel tags");
+      }
+
+      // Get the exit tag on the other side of this tunnel
+      int exitTag = TUNNEL_PAIRS.get(closestTag);
+      Pose2d exitWaypoint = getTagWaypoint(exitTag);
+
+      if (exitWaypoint == null) {
+        return print("ERROR: Could not find exit tag " + exitTag);
+      }
+
+      // Cross through the tunnel to the other side
+      return m_swerve.pathfindToPose(exitWaypoint, true);
+    }, java.util.Set.of(m_swerve));
+  }
+
+  /** Gets a waypoint pose at the tag's location with zero rotation. */
+  private Pose2d getTagWaypoint(int tagId) {
+    var tagPose = k_fieldlayout.getTagPose(tagId);
+    if (tagPose.isEmpty()) {
+      return null;
+    }
+    return new Pose2d(
+        tagPose.get().getX(),
+        tagPose.get().getY(),
+        new Rotation2d(0)
+    );
   }
 
   /** Simple square pattern auto */
