@@ -182,10 +182,19 @@ public class RobotContainer {
       23, new Pose2d(1.5, 7, Rotation2d.fromDegrees(180))
   );
 
+  /** Returns true if any drive input exceeds the deadband. */
+  private boolean hasManualDriveInput() {
+    final double deadband = 0.2;
+    return Math.abs(m_joystick.getLeftX()) > deadband
+        || Math.abs(m_joystick.getLeftY()) > deadband
+        || Math.abs(m_joystick.getRightX()) > deadband;
+  }
+
   /**
    * Creates a command that crosses through the closest tunnel to the other side.
    * Passes through the tunnel without stopping, then continues to final position.
    * Turret tracks targets throughout the pathfinding sequence.
+   * Cancels if any manual drive input is detected.
    */
   private Command createCycleCommand() {
     return defer(() -> {
@@ -230,7 +239,9 @@ public class RobotContainer {
         m_vision.getTurretCamera().aimAtClosestTarget(m_swerve.getPose());
       });
 
-      return new ParallelDeadlineGroup(pathfindSequence, turretTrackingCommand);
+      // Cancel sequence if manual drive input detected
+      return new ParallelDeadlineGroup(pathfindSequence, turretTrackingCommand)
+          .until(this::hasManualDriveInput);
     }, java.util.Set.of(m_swerve));
   }
 
