@@ -4,7 +4,12 @@
 
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.wpilibj2.command.Commands.*;
+
+import java.util.Set;
+
 import com.revrobotics.spark.SparkBase.PersistMode;
+import edu.wpi.first.wpilibj2.command.Commands;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -34,7 +39,7 @@ public class Intake extends SubsystemBase {
   private static final double ROLLER_EJECT_SPEED = -0.6;
 
   // Current limits
-  private static final int SLIDE_CURRENT_LIMIT = 40;
+  private static final int SLIDE_CURRENT_LIMIT = 15;
   private static final int ROLLER_CURRENT_LIMIT = 40;
 
   public Intake() {
@@ -101,36 +106,25 @@ public class Intake extends SubsystemBase {
     stopRoller();
   }
 
+  // ===== State =====
+
+  private boolean m_slideExtended = false;
+
   // ===== Commands =====
 
-  public Command intakeCommand() {
-    return runEnd(
-        () -> {
-          extendSlide();
-          runIntake();
-        },
-        this::stopAll
-    ).withName("Intake");
+  /** Toggles the slide between extended and retracted, running the motor for 1.5s then stopping. */
+  public Command slideCommand() {
+    return Commands.defer(() -> {
+      m_slideExtended = !m_slideExtended;
+      Runnable motorAction = m_slideExtended ? this::extendSlide : this::retractSlide;
+      
+      return this.run(motorAction).withTimeout(1.5).andThen(this.runOnce(this::stopSlide));
+    }, Set.of(this)).withName("SlideToggle");
   }
 
-  public Command ejectCommand() {
-    return runEnd(
-        () -> {
-          extendSlide();
-          runEject();
-        },
-        this::stopAll
-    ).withName("Eject");
-  }
-
-  public Command retractCommand() {
-    return runEnd(
-        () -> {
-          retractSlide();
-          stopRoller();
-        },
-        this::stopAll
-    ).withName("Retract");
+  /** Runs the roller while held, stops on release. */
+  public Command rollerCommand() {
+    return runEnd(this::runIntake, this::stopRoller).withName("Roller");
   }
 
   @Override

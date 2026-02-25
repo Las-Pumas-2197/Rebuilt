@@ -4,7 +4,12 @@
 
 package frc.robot.subsystems.climber;
 
+import static edu.wpi.first.wpilibj2.command.Commands.*;
+
+import java.util.Set;
+
 import com.revrobotics.spark.SparkBase.PersistMode;
+import edu.wpi.first.wpilibj2.command.Commands;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -61,14 +66,20 @@ public class Climber extends SubsystemBase {
     m_hookMotor.set(speed);
   }
 
+  // ===== State =====
+
+  private boolean m_extended = false;
+
   // ===== Commands =====
 
-  public Command extendCommand() {
-    return runEnd(this::extend, this::stop).withName("Extend Climber");
-  }
-
-  public Command retractCommand() {
-    return runEnd(this::retract, this::stop).withName("Retract Climber");
+  /** Toggles the climber between extended and retracted, running the motor for 1.5s then stopping. */
+  public Command climbCommand() {
+    return Commands.defer(() -> {
+      m_extended = !m_extended;
+      Runnable motorAction = m_extended ? this::extend : this::retract;
+      
+      return this.run(motorAction).withTimeout(1.5).andThen(this.runOnce(this::stop));
+    }, Set.of(this)).withName("ClimbToggle");
   }
 
   @Override
