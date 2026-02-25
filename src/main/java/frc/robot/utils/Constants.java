@@ -49,22 +49,18 @@ public final class Constants {
     public static final int BACK_RIGHT_TURN = 8;
     public static final int BACK_RIGHT_CANCODER = 12;
 
-    // === INTAKE SUBSYSTEM (SparkFlex + NEO Vortex) ===
-    public static final int INTAKE_SLIDE = 13;       // Slides intake in/out
-    public static final int INTAKE_ROLLER = 14;      // Intake roller motor
+    public static final int INTAKE_SLIDE = 13;       
+    public static final int INTAKE_ROLLER = 14;      
 
-    // === HOPPER SUBSYSTEM (SparkFlex + NEO Vortex) ===
-    public static final int HOPPER_BASEPLATE = 15;   // Base plate motor
-    public static final int HOPPER_FEEDRAMP = 16;    // Feed ramp motor
+    public static final int HOPPER_BASEPLATE = 15;   
+    public static final int HOPPER_FEEDRAMP = 16;    
 
-    // === TURRET SUBSYSTEM (SparkFlex + NEO Vortex) ===
-    public static final int TURRET_FLYWHEEL_LEFT = 17;   // Left flywheel motor
-    public static final int TURRET_FLYWHEEL_RIGHT = 18;  // Right flywheel motor
-    public static final int TURRET_ROTATION = 19;        // Turret rotation motor
-    public static final int TURRET_FEEDBELT = 20;        // Feed belt motor
+    public static final int TURRET_FLYWHEEL_LEFT = 17; 
+    public static final int TURRET_FLYWHEEL_RIGHT = 18;
+    public static final int TURRET_ROTATION = 19;      
+    public static final int TURRET_FEEDBELT = 20;      
 
-    // === CLIMBER SUBSYSTEM (SparkFlex + NEO Vortex) ===
-    public static final int CLIMBER_HOOK = 21;           // Telescoping hook motor
+    public static final int CLIMBER_HOOK = 21;         
   }
 
   /**
