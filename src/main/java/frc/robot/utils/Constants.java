@@ -28,7 +28,6 @@ public final class Constants {
    * Subsystems: 8 SparkFlex (NEO Vortex)
    */
   public static final class CANIDs {
-    // === SWERVE DRIVE (SparkFlex + NEO Vortex) ===
     // Front Left Module
     public static final int FRONT_LEFT_DRIVE = 1;
     public static final int FRONT_LEFT_TURN = 2;
@@ -76,7 +75,7 @@ public final class Constants {
     public static final double kWheelDiameterMeters = Units.inchesToMeters(kWheelDiameterInches);
     public static final double kWheelCircumferenceMeters = Math.PI * kWheelDiameterMeters;
 
-    // NEO Vortex motor specifications (faster than regular NEO)
+    // NEO Vortex motor specifications
     public static final double kVortexFreeSpeedRpm = 6784.0;
     public static final double kVortexStallTorqueNm = 3.6;
     public static final double kVortexStallCurrentAmps = 211.0;
@@ -86,17 +85,17 @@ public final class Constants {
     // Theoretical max speed (m/s) - ~5.1 m/s with Vortex
     public static final double kMaxDriveSpeed = kDriveWheelFreeSpeedRps * kWheelCircumferenceMeters;
 
-    // Current limits (Vortex can handle higher, but limit for safety)
+    // Current limits
     public static final int kDriveCurrentLimit = 60;
     public static final int kTurnCurrentLimit = 30;
 
-    // Encoder offsets (degrees) - CALIBRATE THESE ON YOUR ROBOT!
+    // Encoder offsets
     public static final double kFrontLeftEncoderOffset = 0.0;
     public static final double kFrontRightEncoderOffset = 0.0;
     public static final double kBackLeftEncoderOffset = 0.0;
     public static final double kBackRightEncoderOffset = 0.0;
 
-    // Turning encoder inverted (typically true for MK5i)
+    // Turning encoder inverted
     public static final boolean kTurningEncoderInverted = true;
   }
 
@@ -105,6 +104,7 @@ public final class Constants {
    */
   public static final class SwerveDriveConstants {
     // Robot physical dimensions (wheel center to wheel center)
+    // UPDATE
     public static final double k_trackwidth = Units.inchesToMeters(22.0);
     public static final double k_wheelbase = Units.inchesToMeters(22.0);
     public static final double k_framelength = k_wheelbase; // front to back (X)
@@ -113,7 +113,7 @@ public final class Constants {
     // Robot mass
     public static final double k_mass = Units.lbsToKilograms(115.0);
 
-    // Wheel specifications (from ModuleConstants)
+    // Wheel specifications
     public static final double k_wheelradius = ModuleConstants.kWheelDiameterMeters / 2.0;
     public static final double k_wheelcircumference = ModuleConstants.kWheelCircumferenceMeters;
 
