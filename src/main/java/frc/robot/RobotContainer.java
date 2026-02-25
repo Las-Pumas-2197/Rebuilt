@@ -42,10 +42,6 @@ public class RobotContainer {
     // Auto chooser
     private final SendableChooser<Command> m_autochooser = new SendableChooser<>();
 
-    // Turret shooting constants for lead correction
-    private static final double TURRET_EXIT_VELOCITY = 8.0; // Average exit velocity (m/s)
-    private static final double TURRET_LAUNCH_ANGLE = Math.toRadians(65); // Launch angle
-
     public RobotContainer() {
         // Configure pathfinding
         Pathfinding.setPathfinder(new LocalADStar());
@@ -96,9 +92,7 @@ public class RobotContainer {
             m_turret.aimAtFieldPoseWithLead(
                 m_swerve.getPose(),
                 k_basinCenter,
-                m_swerve.getFieldSpeeds(),
-                TURRET_EXIT_VELOCITY,
-                TURRET_LAUNCH_ANGLE
+                m_swerve.getFieldSpeeds()
             );
         });
 

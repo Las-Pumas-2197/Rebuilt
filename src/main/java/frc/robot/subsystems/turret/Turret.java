@@ -61,12 +61,20 @@ public class Turret extends SubsystemBase {
   private static final double ROTATION_KI = 0.0;
   private static final double ROTATION_KD = 0.1;
 
+  // Shooting physics constants
+  private static final double LAUNCH_ANGLE      = Math.toRadians(65); // fixed launch angle (rad)
+  private static final double LAUNCH_HEIGHT      = 0.3;    // turret exit height (m)
+  private static final double HUB_TARGET_HEIGHT  = 1.5748; // hub opening height (m)
+  private static final double MIN_EXIT_VELOCITY  = 3.0;    // m/s
+  private static final double MAX_EXIT_VELOCITY  = 15.0;   // m/s
+  private static final double GRAVITY            = 9.81;   // m/s²
+
   public Turret() {
     // Initialize motors
-    m_flywheelLeft = new SparkFlex(CANIDs.TURRET_FLYWHEEL_LEFT, MotorType.kBrushless);
+    m_flywheelLeft  = new SparkFlex(CANIDs.TURRET_FLYWHEEL_LEFT,  MotorType.kBrushless);
     m_flywheelRight = new SparkFlex(CANIDs.TURRET_FLYWHEEL_RIGHT, MotorType.kBrushless);
-    m_rotationMotor = new SparkFlex(CANIDs.TURRET_ROTATION, MotorType.kBrushless);
-    m_feedBeltMotor = new SparkFlex(CANIDs.TURRET_FEEDBELT, MotorType.kBrushless);
+    m_rotationMotor = new SparkFlex(CANIDs.TURRET_ROTATION,       MotorType.kBrushless);
+    m_feedBeltMotor = new SparkFlex(CANIDs.TURRET_FEEDBELT,       MotorType.kBrushless);
 
     // Initialize PID controller
     m_rotationPID = new PIDController(ROTATION_KP, ROTATION_KI, ROTATION_KD);
@@ -160,6 +168,10 @@ public class Turret extends SubsystemBase {
     return m_currentYaw;
   }
 
+  public void setCurrentYaw(double yawRadians) {
+    m_currentYaw = yawRadians;
+  }
+
   public boolean isAtTarget() {
     return m_rotationPID.atSetpoint();
   }
@@ -170,6 +182,40 @@ public class Turret extends SubsystemBase {
 
   public void stopRotation() {
     m_rotationMotor.set(0);
+  }
+
+  // ===== Shooting Physics =====
+
+  /**
+   * Calculates the exit velocity required to reach a target at the given
+   * horizontal distance, using projectile motion with the fixed launch angle.
+   *
+   * v² = g·d² / (2·cos²θ · (d·tanθ − Δh))
+   *
+   * @param horizontalDistance Horizontal distance to target (m)
+   * @return Clamped exit velocity in m/s
+   */
+  public double calculateRequiredExitVelocity(double horizontalDistance) {
+    double deltaH     = HUB_TARGET_HEIGHT - LAUNCH_HEIGHT;
+    double tanAngle   = Math.tan(LAUNCH_ANGLE);
+    double cosAngle   = Math.cos(LAUNCH_ANGLE);
+    double denominator = 2.0 * cosAngle * cosAngle * (horizontalDistance * tanAngle - deltaH);
+
+    if (denominator <= 0) {
+      return MAX_EXIT_VELOCITY; // target unreachable at this angle — use max
+    }
+
+    double velocity = Math.sqrt(GRAVITY * horizontalDistance * horizontalDistance / denominator);
+    return Math.max(MIN_EXIT_VELOCITY, Math.min(MAX_EXIT_VELOCITY, velocity));
+  }
+
+  /**
+   * Maps a required exit velocity to a flywheel motor output (0–1).
+   * Uses a linear mapping anchored at MAX_EXIT_VELOCITY → FLYWHEEL_SHOOT_SPEED.
+   */
+  private double velocityToMotorSpeed(double exitVelocity) {
+    double speed = (exitVelocity / MAX_EXIT_VELOCITY) * FLYWHEEL_SHOOT_SPEED;
+    return Math.max(FLYWHEEL_IDLE_SPEED, Math.min(FLYWHEEL_SHOOT_SPEED, speed));
   }
 
   // ===== Aiming Methods =====
@@ -187,6 +233,16 @@ public class Turret extends SubsystemBase {
     setTargetYaw(calculateAngleToFieldPose(robotPose, targetPose));
   }
 
+  /**
+   * Calculates a lead-corrected aim angle using iterative convergence.
+   *
+   * @param robotPose           Current robot pose
+   * @param targetPose          Field pose of the target
+   * @param fieldRelativeSpeeds Field-relative chassis speeds
+   * @param exitVelocity        Projectile exit velocity (m/s)
+   * @param launchAngle         Launch angle above horizontal (rad)
+   * @return Lead-corrected turret yaw angle relative to robot heading (rad)
+   */
   public double calculateLeadCorrectedAngle(
       Pose2d robotPose,
       Pose2d targetPose,
@@ -194,13 +250,13 @@ public class Turret extends SubsystemBase {
       double exitVelocity,
       double launchAngle) {
 
-    Translation2d robotPos = robotPose.getTranslation();
+    Translation2d robotPos  = robotPose.getTranslation();
     Translation2d targetPos = targetPose.getTranslation();
     double horizontalVelocity = exitVelocity * Math.cos(launchAngle);
 
     Translation2d adjustedTarget = targetPos;
     for (int i = 0; i < 3; i++) {
-      double distance = robotPos.getDistance(adjustedTarget);
+      double distance     = robotPos.getDistance(adjustedTarget);
       double timeOfFlight = distance / horizontalVelocity;
       double driftX = fieldRelativeSpeeds.vxMetersPerSecond * timeOfFlight;
       double driftY = fieldRelativeSpeeds.vyMetersPerSecond * timeOfFlight;
@@ -218,13 +274,32 @@ public class Turret extends SubsystemBase {
     return normalizeAngle(angleToTarget - robotHeading);
   }
 
+  /**
+   * Aims the turret at a field pose with lead correction and dynamically sets
+   * flywheel speed based on the exit velocity required to reach the target
+   * from the robot's current position.
+   *
+   * @param robotPose           Current robot pose
+   * @param targetPose          Field pose of the target (e.g. hub center)
+   * @param fieldRelativeSpeeds Field-relative chassis speeds for lead correction
+   */
   public void aimAtFieldPoseWithLead(
       Pose2d robotPose,
       Pose2d targetPose,
-      ChassisSpeeds fieldRelativeSpeeds,
-      double exitVelocity,
-      double launchAngle) {
-    setTargetYaw(calculateLeadCorrectedAngle(robotPose, targetPose, fieldRelativeSpeeds, exitVelocity, launchAngle));
+      ChassisSpeeds fieldRelativeSpeeds) {
+
+    double distance    = robotPose.getTranslation().getDistance(targetPose.getTranslation());
+    double exitVelocity = calculateRequiredExitVelocity(distance);
+
+    // Spin flywheels to the speed required for this distance
+    setFlywheelSpeed(velocityToMotorSpeed(exitVelocity));
+
+    // Aim with lead correction using the calculated velocity
+    setTargetYaw(calculateLeadCorrectedAngle(
+        robotPose, targetPose, fieldRelativeSpeeds, exitVelocity, LAUNCH_ANGLE));
+
+    SmartDashboard.putNumber("Turret/ExitVelocity", exitVelocity);
+    SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
   }
 
   // ===== Combined Operations =====
@@ -260,7 +335,7 @@ public class Turret extends SubsystemBase {
   // ===== Utility Methods =====
 
   private double normalizeAngle(double angle) {
-    while (angle > Math.PI) angle -= 2 * Math.PI;
+    while (angle > Math.PI)  angle -= 2 * Math.PI;
     while (angle < -Math.PI) angle += 2 * Math.PI;
     return angle;
   }
@@ -289,23 +364,6 @@ public class Turret extends SubsystemBase {
         || Math.abs(m_currentYaw - MAX_YAW) < tolerance;
   }
 
-  // ===== Simulation Support =====
-
-  public void updateSimulation(double dt) {
-    double maxRate = Math.toRadians(360);
-    double error = m_targetYaw - m_currentYaw;
-    double maxDelta = maxRate * dt;
-    if (Math.abs(error) < maxDelta) {
-      m_currentYaw = m_targetYaw;
-    } else {
-      m_currentYaw += Math.signum(error) * maxDelta;
-    }
-  }
-
-  public void setCurrentYaw(double yawRadians) {
-    m_currentYaw = yawRadians;
-  }
-
   @Override
   public void periodic() {
     // Run rotation PID control
@@ -313,13 +371,13 @@ public class Turret extends SubsystemBase {
     m_rotationMotor.set(rotationOutput);
 
     // Telemetry
-    SmartDashboard.putNumber("Turret/TargetYaw", Math.toDegrees(m_targetYaw));
-    SmartDashboard.putNumber("Turret/CurrentYaw", Math.toDegrees(m_currentYaw));
-    SmartDashboard.putBoolean("Turret/AtTarget", isAtTarget());
-    SmartDashboard.putBoolean("Turret/AtLimit", isAtLimit());
-    SmartDashboard.putNumber("Turret/FlywheelLeftOutput", m_flywheelLeft.getAppliedOutput());
+    SmartDashboard.putNumber("Turret/TargetYaw",           Math.toDegrees(m_targetYaw));
+    SmartDashboard.putNumber("Turret/CurrentYaw",          Math.toDegrees(m_currentYaw));
+    SmartDashboard.putBoolean("Turret/AtTarget",           isAtTarget());
+    SmartDashboard.putBoolean("Turret/AtLimit",            isAtLimit());
+    SmartDashboard.putNumber("Turret/FlywheelLeftOutput",  m_flywheelLeft.getAppliedOutput());
     SmartDashboard.putNumber("Turret/FlywheelRightOutput", m_flywheelRight.getAppliedOutput());
-    SmartDashboard.putNumber("Turret/FeedBeltOutput", m_feedBeltMotor.getAppliedOutput());
-    SmartDashboard.putBoolean("Turret/FlywheelsAtSpeed", areFlywheelsAtSpeed());
+    SmartDashboard.putNumber("Turret/FeedBeltOutput",      m_feedBeltMotor.getAppliedOutput());
+    SmartDashboard.putBoolean("Turret/FlywheelsAtSpeed",   areFlywheelsAtSpeed());
   }
 }

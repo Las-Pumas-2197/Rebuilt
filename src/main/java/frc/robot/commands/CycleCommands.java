@@ -22,10 +22,6 @@ public final class CycleCommands {
 
     private CycleCommands() {}
 
-    // Turret shooting constants for lead correction
-    private static final double TURRET_EXIT_VELOCITY = 8.0; // Average exit velocity (m/s)
-    private static final double TURRET_LAUNCH_ANGLE = Math.toRadians(65); // Launch angle
-
     // Tunnel tag pairs: each tunnel has a tag on each end
     // North tunnel: 22 <-> 23, South tunnel: 28 <-> 17
     private static final Map<Integer, Integer> TUNNEL_PAIRS = Map.of(
@@ -108,9 +104,7 @@ public final class CycleCommands {
                 turret.aimAtFieldPoseWithLead(
                     swerve.getPose(),
                     k_basinCenter,
-                    swerve.getFieldSpeeds(),
-                    TURRET_EXIT_VELOCITY,
-                    TURRET_LAUNCH_ANGLE
+                    swerve.getFieldSpeeds()
                 );
             });
 
