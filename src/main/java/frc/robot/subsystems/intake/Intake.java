@@ -8,10 +8,10 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 import java.util.Set;
 
-import com.revrobotics.spark.SparkBase.PersistMode;
-import edu.wpi.first.wpilibj2.command.Commands;
-import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkFlex;
+import edu.wpi.first.wpilibj2.command.Commands;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;

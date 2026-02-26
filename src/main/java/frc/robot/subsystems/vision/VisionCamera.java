@@ -16,7 +16,6 @@ import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 import edu.wpi.first.math.Matrix;
@@ -38,11 +37,7 @@ public class VisionCamera extends SubsystemBase {
 
   public VisionCamera(String name, Transform3d intrinsics) {
     m_camera = new PhotonCamera(name);
-    m_estimator = new PhotonPoseEstimator(
-        k_fieldlayout,
-        PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-        intrinsics);
-    m_estimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+    m_estimator = new PhotonPoseEstimator(k_fieldlayout, intrinsics);
   }
 
   /**
