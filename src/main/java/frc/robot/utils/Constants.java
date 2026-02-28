@@ -29,37 +29,37 @@ public final class Constants {
    */
   public static final class CANIDs {
     // Front Left Module
-    public static final int FRONT_LEFT_DRIVE = 1;
-    public static final int FRONT_LEFT_TURN = 2;
+    public static final int FRONT_LEFT_DRIVE = 19;
+    public static final int FRONT_LEFT_TURN = 18;
     public static final int FRONT_LEFT_CANCODER = 9;
 
     // Front Right Module
-    public static final int FRONT_RIGHT_DRIVE = 3;
-    public static final int FRONT_RIGHT_TURN = 4;
+    public static final int FRONT_RIGHT_DRIVE = 14;
+    public static final int FRONT_RIGHT_TURN = 15;
     public static final int FRONT_RIGHT_CANCODER = 10;
 
     // Back Left Module
-    public static final int BACK_LEFT_DRIVE = 5;
-    public static final int BACK_LEFT_TURN = 6;
+    public static final int BACK_LEFT_DRIVE = 21;
+    public static final int BACK_LEFT_TURN = 22;
     public static final int BACK_LEFT_CANCODER = 11;
 
     // Back Right Module
-    public static final int BACK_RIGHT_DRIVE = 7;
-    public static final int BACK_RIGHT_TURN = 8;
+    public static final int BACK_RIGHT_DRIVE = 27;
+    public static final int BACK_RIGHT_TURN = 26;
     public static final int BACK_RIGHT_CANCODER = 12;
 
-    public static final int INTAKE_SLIDE = 13;       
-    public static final int INTAKE_ROLLER = 14;      
+    public static final int INTAKE_SLIDE = 23;       
+    public static final int INTAKE_ROLLER = 16;      
 
-    public static final int HOPPER_BASEPLATE = 15;   
-    public static final int HOPPER_FEEDRAMP = 16;    
+    public static final int HOPPER_BASEPLATE = 17;   
+    public static final int HOPPER_FEEDRAMP = 29;    
 
-    public static final int TURRET_FLYWHEEL_LEFT = 17; 
-    public static final int TURRET_FLYWHEEL_RIGHT = 18;
-    public static final int TURRET_ROTATION = 19;      
-    public static final int TURRET_FEEDBELT = 20;      
+    public static final int TURRET_FLYWHEEL_LEFT = 24; 
+    public static final int TURRET_FLYWHEEL_RIGHT = 25;
+    public static final int TURRET_ROTATION = 28;      
+    public static final int TURRET_FEEDBELT = 30;      
 
-    public static final int CLIMBER_HOOK = 21;         
+    public static final int CLIMBER_HOOK = 20;         
   }
 
   /**
