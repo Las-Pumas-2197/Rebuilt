@@ -33,8 +33,6 @@ public class Turret extends SubsystemBase {
   private final SparkFlex m_flywheelRight;
   private final SparkFlex m_rotationMotor;
 
-
-
   // PID for turret rotation position control
   private final PIDController m_rotationPID;
 
@@ -49,7 +47,6 @@ public class Turret extends SubsystemBase {
   // Motor speeds
   private static final double FLYWHEEL_SHOOT_SPEED = 0.5;
   private static final double FLYWHEEL_IDLE_SPEED = 0.3;
-
 
   // Current limits
   private static final int FLYWHEEL_CURRENT_LIMIT = 60;

@@ -78,7 +78,12 @@ public class RobotContainer {
 
         // intake roller
         m_joystick.a().whileTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
-        m_joystick.x().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_turret));
+        
+        // Feed belt and kicker
+        m_joystick.x().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));
+
+        // turret
+        m_joystick.rightTrigger().whileTrue(runEnd(() -> m_turret.spinUpFlywheels(), () -> m_turret.stopAllShooter(), m_turret));
 
         m_joystick.start().onTrue(runOnce(() -> m_turret.setFlywheelSpeed(0.5), m_turret));
         m_joystick.back().onTrue(runOnce(() -> m_turret.setFlywheelSpeed(0), m_turret));
