@@ -6,18 +6,18 @@
   "absoluteEncoderOffset": 0,
   "drive": {
     "type": "sparkflex_vortex",
-    "id": 11,
+    "id": 19,
     "canbus": "rio"
   },
   "angle": {
     "type": "sparkflex_vortex",
-    "id": 12,
+    "id": 18,
     "canbus": "rio"
   },
   "encoder": {
-    "type": "throughbore",
-    "id": 0,
-    "canbus": null
+    "type": "cancoder",
+    "id": 9,
+    "canbus": "rio"
   },
   "inverted": {
     "drive": false,
