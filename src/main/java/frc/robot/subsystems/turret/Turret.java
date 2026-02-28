@@ -32,7 +32,8 @@ public class Turret extends SubsystemBase {
   private final SparkFlex m_flywheelLeft;
   private final SparkFlex m_flywheelRight;
   private final SparkFlex m_rotationMotor;
-  private final SparkFlex m_feedBeltMotor;
+
+
 
   // PID for turret rotation position control
   private final PIDController m_rotationPID;
@@ -46,15 +47,13 @@ public class Turret extends SubsystemBase {
   private static final double MAX_YAW = Math.toRadians(-90);   // 270 degrees (-90)
 
   // Motor speeds
-  private static final double FLYWHEEL_SHOOT_SPEED = 0.9;
+  private static final double FLYWHEEL_SHOOT_SPEED = 0.5;
   private static final double FLYWHEEL_IDLE_SPEED = 0.3;
-  private static final double FEEDBELT_SPEED = 0.8;
-  private static final double FEEDBELT_REVERSE_SPEED = -0.5;
+
 
   // Current limits
   private static final int FLYWHEEL_CURRENT_LIMIT = 60;
   private static final int ROTATION_CURRENT_LIMIT = 40;
-  private static final int FEEDBELT_CURRENT_LIMIT = 30;
 
   // PID constants for rotation
   private static final double ROTATION_KP = 2.0;
@@ -74,7 +73,6 @@ public class Turret extends SubsystemBase {
     m_flywheelLeft  = new SparkFlex(CANIDs.TURRET_FLYWHEEL_LEFT,  MotorType.kBrushless);
     m_flywheelRight = new SparkFlex(CANIDs.TURRET_FLYWHEEL_RIGHT, MotorType.kBrushless);
     m_rotationMotor = new SparkFlex(CANIDs.TURRET_ROTATION,       MotorType.kBrushless);
-    m_feedBeltMotor = new SparkFlex(CANIDs.TURRET_FEEDBELT,       MotorType.kBrushless);
 
     // Initialize PID controller
     m_rotationPID = new PIDController(ROTATION_KP, ROTATION_KI, ROTATION_KD);
@@ -104,12 +102,6 @@ public class Turret extends SubsystemBase {
     rotationConfig.idleMode(IdleMode.kBrake);
     rotationConfig.smartCurrentLimit(ROTATION_CURRENT_LIMIT);
     m_rotationMotor.configure(rotationConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-    // Feed belt config
-    SparkFlexConfig feedBeltConfig = new SparkFlexConfig();
-    feedBeltConfig.idleMode(IdleMode.kBrake);
-    feedBeltConfig.smartCurrentLimit(FEEDBELT_CURRENT_LIMIT);
-    m_feedBeltMotor.configure(feedBeltConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   // ===== Flywheel Control =====
@@ -137,20 +129,6 @@ public class Turret extends SubsystemBase {
   public boolean areFlywheelsAtSpeed() {
     // TODO: Check actual RPM from encoder when tuned
     return Math.abs(m_flywheelLeft.getAppliedOutput()) > 0.85;
-  }
-
-  // ===== Feed Belt Control =====
-
-  public void runFeedBelt() {
-    m_feedBeltMotor.set(FEEDBELT_SPEED);
-  }
-
-  public void reverseFeedBelt() {
-    m_feedBeltMotor.set(FEEDBELT_REVERSE_SPEED);
-  }
-
-  public void stopFeedBelt() {
-    m_feedBeltMotor.set(0);
   }
 
   // ===== Turret Rotation Control =====
@@ -182,6 +160,11 @@ public class Turret extends SubsystemBase {
 
   public void stopRotation() {
     m_rotationMotor.set(0);
+  }
+
+  public void stopAllShooter() {
+    m_flywheelLeft.stopMotor();
+    m_flywheelRight.stopMotor();
   }
 
   // ===== Shooting Physics =====
@@ -306,7 +289,6 @@ public class Turret extends SubsystemBase {
 
   public void stopAll() {
     stopFlywheels();
-    stopFeedBelt();
     stopRotation();
   }
 
@@ -317,7 +299,7 @@ public class Turret extends SubsystemBase {
         () -> {
           spinUpFlywheels();
           if (areFlywheelsAtSpeed()) {
-            runFeedBelt();
+            // runFeedBelt();
           }
         },
         this::stopAll
@@ -377,7 +359,7 @@ public class Turret extends SubsystemBase {
     SmartDashboard.putBoolean("Turret/AtLimit",            isAtLimit());
     SmartDashboard.putNumber("Turret/FlywheelLeftOutput",  m_flywheelLeft.getAppliedOutput());
     SmartDashboard.putNumber("Turret/FlywheelRightOutput", m_flywheelRight.getAppliedOutput());
-    SmartDashboard.putNumber("Turret/FeedBeltOutput",      m_feedBeltMotor.getAppliedOutput());
+    // SmartDashboard.putNumber("Turret/FeedBeltOutput",      m_feedBeltMotor.getAppliedOutput());
     SmartDashboard.putBoolean("Turret/FlywheelsAtSpeed",   areFlywheelsAtSpeed());
   }
 }

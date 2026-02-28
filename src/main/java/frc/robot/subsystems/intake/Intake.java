@@ -33,13 +33,13 @@ public class Intake extends SubsystemBase {
   private final SparkFlex m_rollerMotor;
 
   // Motor speeds
-  private static final double SLIDE_EXTEND_SPEED = 0.5;
-  private static final double SLIDE_RETRACT_SPEED = -0.5;
-  private static final double ROLLER_INTAKE_SPEED = 0.8;
-  private static final double ROLLER_EJECT_SPEED = -0.6;
+  private static final double SLIDE_EXTEND_SPEED = 1;
+  private static final double SLIDE_RETRACT_SPEED = -1;
+  private static final double ROLLER_INTAKE_SPEED = 1;
+  private static final double ROLLER_EJECT_SPEED = -1;
 
   // Current limits
-  private static final int SLIDE_CURRENT_LIMIT = 15;
+  private static final int SLIDE_CURRENT_LIMIT = 20;
   private static final int ROLLER_CURRENT_LIMIT = 40;
 
   public Intake() {

@@ -23,6 +23,9 @@ import com.pathplanner.lib.pathfinding.Pathfinding;
 import frc.robot.commands.Autos;
 import frc.robot.commands.CycleCommands;
 import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.feeder.Feeder;
+import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.utils.BlackBox;
@@ -35,9 +38,13 @@ public class RobotContainer {
 
     // Subsystems
     private final Swerve m_swerve = new Swerve();
-    private final Vision m_vision = new Vision();
+    private final Hopper m_hopper = new Hopper();
+    private final Intake m_intake = new Intake();
     private final Turret m_turret = new Turret();
-    private final Telemetry m_telemetry = new Telemetry(m_vision, m_swerve);
+    private final Feeder m_feeder = new Feeder();
+    // private final Vision m_vision = new Vision();
+    // private final Turret m_turret = new Turret();
+    // private final Telemetry m_telemetry = new Telemetry(m_vision, m_swerve);
 
     // Auto chooser
     private final SendableChooser<Command> m_autochooser = new SendableChooser<>();
@@ -48,14 +55,14 @@ public class RobotContainer {
         m_swerve.runAutoBuilder();
 
         // Configure autos
-        m_autochooser.setDefaultOption("square", Autos.simpleSquareAuto(m_swerve, m_turret));
-        m_autochooser.addOption("drive under tag 28", Autos.driveUnderTagAuto(m_swerve, 28));
+        // m_autochooser.setDefaultOption("square", Autos.simpleSquareAuto(m_swerve, m_turret));
+        m_autochooser.setDefaultOption("drive under tag 28", Autos.driveUnderTagAuto(m_swerve, 28));
         m_autochooser.addOption("autoalign reef A", Autos.autoAlignReef(m_swerve, 18));
         SmartDashboard.putData(m_autochooser);
 
         // Default commands
-        m_swerve.setDefaultCommand(swerveDefaultCommand());
-        m_vision.setDefaultCommand(visionDefaultCommand());
+        // m_swerve.setDefaultCommand(swerveDefaultCommand());
+        // m_vision.setDefaultCommand(visionDefaultCommand());
 
         configureBindings();
     }
@@ -63,7 +70,18 @@ public class RobotContainer {
     private void configureBindings() {
         m_joystick.back().onTrue(runOnce(() -> m_swerve.getCurrentCommand().cancel()));
         m_joystick.start().whileTrue(run(() -> BlackBox.DataRecorder.recordData("heading", m_swerve.getGyroHeading())));
-        m_joystick.a().onTrue(CycleCommands.createCycleCommand(m_swerve, m_turret, this::hasManualDriveInput));
+        // m_joystick.a().onTrue(CycleCommands.createCycleCommand(m_swerve, m_turret, this::hasManualDriveInput));
+
+        // hopper extension bindings
+        m_joystick.povUp().whileTrue(runEnd(() -> m_intake.extendSlide(), () -> m_intake.stopSlide(), m_hopper));
+        m_joystick.povDown().whileTrue(runEnd(() -> m_intake.retractSlide(), () -> m_intake.stopSlide(), m_intake));
+
+        // intake roller
+        m_joystick.a().whileTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
+        m_joystick.x().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_turret));
+
+        m_joystick.start().onTrue(runOnce(() -> m_turret.setFlywheelSpeed(0.5), m_turret));
+        m_joystick.back().onTrue(runOnce(() -> m_turret.setFlywheelSpeed(0), m_turret));
     }
 
     private boolean hasManualDriveInput() {
@@ -75,25 +93,25 @@ public class RobotContainer {
 
     private ParallelCommandGroup visionDefaultCommand() {
         ParallelCommandGroup cmd = new ParallelCommandGroup();
-        cmd.addCommands(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
-        cmd.addRequirements(m_vision);
+        // cmd.addCommands(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
+        // cmd.addRequirements(m_vision);
         return cmd;
     }
 
     private Command swerveDefaultCommand() {
         Command driveCommand = new RunCommand(
             () -> m_swerve.drive(new ChassisSpeeds(
-                MathUtil.applyDeadband(m_joystick.getLeftX(), 0.2) * k_maxlinspeedteleop,
                 -MathUtil.applyDeadband(m_joystick.getLeftY(), 0.2) * k_maxlinspeedteleop,
+                -MathUtil.applyDeadband(m_joystick.getLeftX(), 0.2) * k_maxlinspeedteleop,
                 -MathUtil.applyDeadband(m_joystick.getRightX(), 0.2) * k_maxrotspeedteleop)),
             m_swerve);
 
         Command turretTrackingCommand = run(() -> {
-            m_turret.aimAtFieldPoseWithLead(
-                m_swerve.getPose(),
-                k_basinCenter,
-                m_swerve.getFieldSpeeds()
-            );
+            // m_turret.aimAtFieldPoseWithLead(
+            //     m_swerve.getPose(),
+            //     k_basinCenter,
+            //     m_swerve.getFieldSpeeds()
+            // );
         });
 
         return new ParallelCommandGroup(driveCommand, turretTrackingCommand);

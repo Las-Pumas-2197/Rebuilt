@@ -139,7 +139,7 @@ public final class Constants {
    */
   public static final class OIConstants {
     public static final int k_joystickport = 0;
-    public static final double k_maxlinspeedteleop = 3.0; // m/s
+    public static final double k_maxlinspeedteleop = 5.0; // m/s
     public static final double k_maxrotspeedteleop = 2 * Math.PI; // rad/s
   }
 
