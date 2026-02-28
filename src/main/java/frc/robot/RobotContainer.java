@@ -87,6 +87,10 @@ public class RobotContainer {
 
         m_joystick.start().onTrue(runOnce(() -> m_turret.setFlywheelSpeed(0.5), m_turret));
         m_joystick.back().onTrue(runOnce(() -> m_turret.setFlywheelSpeed(0), m_turret));
+
+        // turret manual rotation
+        m_joystick.povLeft().whileTrue(runEnd(() -> m_turret.setRotationSpeed(-0.3), m_turret::stopRotation, m_turret));
+        m_joystick.povRight().whileTrue(runEnd(() -> m_turret.setRotationSpeed(0.3), m_turret::stopRotation, m_turret));
     }
 
     private boolean hasManualDriveInput() {
