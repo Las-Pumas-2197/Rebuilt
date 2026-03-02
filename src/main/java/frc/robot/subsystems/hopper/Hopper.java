@@ -27,8 +27,8 @@ public class Hopper extends SubsystemBase {
   private final SparkFlex m_conveyorMotor;
 
   // Motor speeds
-  private static final double CONVEYOR_FEED_SPEED = 0.1;
-  private static final double CONVEYOR_REVERSE_SPEED = -0.1;
+  private static final double CONVEYOR_FEED_SPEED = -1;
+  private static final double CONVEYOR_REVERSE_SPEED = 1;
 
   // Current limits
   private static final int CONVEYOR_CURRENT_LIMIT = 40;

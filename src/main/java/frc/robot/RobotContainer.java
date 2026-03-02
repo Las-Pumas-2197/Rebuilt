@@ -78,6 +78,8 @@ public class RobotContainer {
 
         // intake roller
         m_joystick.a().whileTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
+        // hopper
+        m_joystick.y().whileTrue(runEnd(() -> m_hopper.runConveyor(), () -> m_hopper.stopConveyor(), m_hopper));
         
         // Feed belt and kicker
         m_joystick.x().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));
@@ -91,6 +93,16 @@ public class RobotContainer {
         // turret manual rotation — nudges target yaw so PID+limits stay in control
         m_joystick.povLeft().whileTrue(run(() -> m_turret.nudgeTargetYaw(-Math.toRadians(1.5)), m_turret));
         m_joystick.povRight().whileTrue(run(() -> m_turret.nudgeTargetYaw(Math.toRadians(1.5)), m_turret));
+    }
+
+    private void runAllIntake() {
+        m_feeder.runFeeder();
+        m_hopper.runConveyor();
+    }
+
+    private void stopAllIntake() {
+        m_feeder.stopAllFeeder();
+        m_hopper.stopConveyor();
     }
 
     private boolean hasManualDriveInput() {
