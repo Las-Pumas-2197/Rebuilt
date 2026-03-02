@@ -51,13 +51,13 @@ public final class Constants {
     public static final int INTAKE_SLIDE = 23;       
     public static final int INTAKE_ROLLER = 16;      
 
-    public static final int HOPPER_BASEPLATE = 17;   
-    public static final int HOPPER_FEEDRAMP = 29;    
+    public static final int HOPPER_CONVEYOR = 17;
+    public static final int HOPPER_FEEDRAMP = 29;
 
-    public static final int TURRET_FLYWHEEL_LEFT = 24; 
+    public static final int TURRET_FLYWHEEL_LEFT = 24;
     public static final int TURRET_FLYWHEEL_RIGHT = 25;
-    public static final int TURRET_ROTATION = 28;      
-    public static final int TURRET_FEEDBELT = 30;      
+    public static final int TURRET_ROTATION = 28;
+    public static final int FEEDER_KICKER = 30;
 
     public static final int CLIMBER_HOOK = 20;         
   }
@@ -188,6 +188,9 @@ public final class Constants {
     public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.00, 0.00, 0.00);
     public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(
         Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+
+    // Limelight name (NetworkTables key)
+    public static final String k_limelightname = "limelight";
 
     // Turret camera configuration
     public static final String k_turretcameraname = "turret_camera";

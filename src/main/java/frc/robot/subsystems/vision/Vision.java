@@ -21,25 +21,36 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.DoubleSupplier;
 
 public class Vision extends SubsystemBase {
 
-  /** Vision cameras for pose estimation. */
+  /** PhotonVision cameras for pose estimation. */
   private final List<VisionCamera> m_cameras = new ArrayList<>();
+  /** Limelight camera for pose estimation. */
+  private final LimelightCamera m_limelight;
 
-  public Vision() {
+  /**
+   * @param yawDegreesSupplier Supplier for the robot's gyro yaw in degrees (used by Limelight MegaTag2).
+   */
+  public Vision(DoubleSupplier yawDegreesSupplier) {
     for (int num = 0; num < k_cameranames.size(); num++) {
       m_cameras.add(new VisionCamera(k_cameranames.get(num), k_cameraintrinsics.get(num)));
     }
+    m_limelight = new LimelightCamera(k_limelightname, yawDegreesSupplier);
   }
 
-  /** Get a list of all of the estimates from the camera pipelines. */
+  /** Get a list of all of the estimates from all camera pipelines (PhotonVision + Limelight). */
   public List<Pair<Optional<EstimatedRobotPose>, Matrix<N3, N1>>> getEstimates() {
     List<Pair<Optional<EstimatedRobotPose>, Matrix<N3, N1>>> estimates = new ArrayList<>();
     for (var camera : m_cameras) {
       if (camera.getEstimate().getFirst().isPresent()) {
         estimates.add(camera.getEstimate());
       }
+    }
+    var llEstimate = m_limelight.getEstimate();
+    if (llEstimate.getFirst().isPresent()) {
+      estimates.add(llEstimate);
     }
     return estimates;
   }

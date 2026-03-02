@@ -36,13 +36,13 @@ public class Turret extends SubsystemBase {
   // PID for turret rotation position control
   private final PIDController m_rotationPID;
 
-  // Turret state
-  private double m_targetYaw = Math.PI;      // Target yaw angle (radians)
-  private double m_currentYaw = Math.PI;     // Current yaw angle (radians)
+  // Turret state — encoder starts at 0 on boot (turret at home position)
+  private double m_targetYaw = 0.0;
+  private double m_currentYaw = 0.0;
 
-  // Turret physical limits (radians)
-  private static final double MIN_YAW = Math.toRadians(135);   // 135 degrees
-  private static final double MAX_YAW = Math.toRadians(-90);   // 270 degrees (-90)
+  // Rotation limits: ±90° from home position (0 = forward)
+  private static final double MIN_YAW = -Math.PI / 2;  // -90°
+  private static final double MAX_YAW =  Math.PI / 2;  //  +90°
 
   // Motor speeds
   private static final double FLYWHEEL_SHOOT_SPEED = 0.5;
@@ -51,6 +51,9 @@ public class Turret extends SubsystemBase {
   // Current limits
   private static final int FLYWHEEL_CURRENT_LIMIT = 60;
   private static final int ROTATION_CURRENT_LIMIT = 40;
+
+  // Gear ratio: 10 motor rotations per 1 turret rotation
+  private static final double TURRET_GEAR_RATIO = 10.0;
 
   // PID constants for rotation
   private static final double ROTATION_KP = 2.0;
@@ -98,6 +101,8 @@ public class Turret extends SubsystemBase {
     SparkFlexConfig rotationConfig = new SparkFlexConfig();
     rotationConfig.idleMode(IdleMode.kBrake);
     rotationConfig.smartCurrentLimit(ROTATION_CURRENT_LIMIT);
+    // Convert encoder position to turret radians directly
+    rotationConfig.encoder.positionConversionFactor((2 * Math.PI) / TURRET_GEAR_RATIO);
     m_rotationMotor.configure(rotationConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
@@ -139,12 +144,18 @@ public class Turret extends SubsystemBase {
   }
 
   public double getCurrentYaw() {
-    // TODO: Read from encoder when hardware is calibrated
     return m_currentYaw;
   }
 
-  public void setCurrentYaw(double yawRadians) {
-    m_currentYaw = yawRadians;
+  /**
+   * Zeros the rotation encoder at the turret's current physical position.
+   * Call this once at match start with the turret at the known home position
+   * (turret pointing forward relative to robot = 0 radians).
+   */
+  public void zeroTurret() {
+    m_rotationMotor.getEncoder().setPosition(0);
+    m_currentYaw = 0;
+    m_targetYaw = 0;
   }
 
   public boolean isAtTarget() {
@@ -153,6 +164,15 @@ public class Turret extends SubsystemBase {
 
   public void setRotationSpeed(double speed) {
     m_rotationMotor.set(speed);
+  }
+
+  /**
+   * Increments the target yaw by the given delta (radians).
+   * Clamped to [MIN_YAW, MAX_YAW] — call this for manual joystick control
+   * so limits are enforced and PID stays in control of the motor.
+   */
+  public void nudgeTargetYaw(double deltaRadians) {
+    setTargetYaw(m_targetYaw + deltaRadians);
   }
 
   public void stopRotation() {
@@ -296,7 +316,7 @@ public class Turret extends SubsystemBase {
         () -> {
           spinUpFlywheels();
           if (areFlywheelsAtSpeed()) {
-            // runFeedBelt();
+            // runKicker();
           }
         },
         this::stopAll
@@ -320,17 +340,11 @@ public class Turret extends SubsystemBase {
   }
 
   private double clampYaw(double yaw) {
-    yaw = normalizeAngle(yaw);
-    if (isYawInRange(yaw)) {
-      return yaw;
-    }
-    double distToMin = Math.abs(normalizeAngle(yaw - MIN_YAW));
-    double distToMax = Math.abs(normalizeAngle(yaw - MAX_YAW));
-    return distToMin < distToMax ? MIN_YAW : MAX_YAW;
+    return Math.max(MIN_YAW, Math.min(MAX_YAW, yaw));
   }
 
   private boolean isYawInRange(double yaw) {
-    return yaw >= MIN_YAW || yaw <= MAX_YAW;
+    return yaw >= MIN_YAW && yaw <= MAX_YAW;
   }
 
   public boolean isYawReachable(double yaw) {
@@ -345,6 +359,9 @@ public class Turret extends SubsystemBase {
 
   @Override
   public void periodic() {
+    // Read current turret angle from encoder (radians, zeroed at home position)
+    m_currentYaw = m_rotationMotor.getEncoder().getPosition();
+
     // Run rotation PID control
     double rotationOutput = m_rotationPID.calculate(m_currentYaw, m_targetYaw);
     m_rotationMotor.set(rotationOutput);

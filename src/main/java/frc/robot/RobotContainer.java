@@ -42,7 +42,7 @@ public class RobotContainer {
     private final Intake m_intake = new Intake();
     private final Turret m_turret = new Turret();
     private final Feeder m_feeder = new Feeder();
-    // private final Vision m_vision = new Vision();
+    // private final Vision m_vision = new Vision(() -> m_swerve.getGyroHeading().getDegrees());
     // private final Turret m_turret = new Turret();
     // private final Telemetry m_telemetry = new Telemetry(m_vision, m_swerve);
 
@@ -88,9 +88,9 @@ public class RobotContainer {
         m_joystick.start().onTrue(runOnce(() -> m_turret.setFlywheelSpeed(0.5), m_turret));
         m_joystick.back().onTrue(runOnce(() -> m_turret.setFlywheelSpeed(0), m_turret));
 
-        // turret manual rotation
-        m_joystick.povLeft().whileTrue(runEnd(() -> m_turret.setRotationSpeed(-0.3), m_turret::stopRotation, m_turret));
-        m_joystick.povRight().whileTrue(runEnd(() -> m_turret.setRotationSpeed(0.3), m_turret::stopRotation, m_turret));
+        // turret manual rotation — nudges target yaw so PID+limits stay in control
+        m_joystick.povLeft().whileTrue(run(() -> m_turret.nudgeTargetYaw(-Math.toRadians(1.5)), m_turret));
+        m_joystick.povRight().whileTrue(run(() -> m_turret.nudgeTargetYaw(Math.toRadians(1.5)), m_turret));
     }
 
     private boolean hasManualDriveInput() {
