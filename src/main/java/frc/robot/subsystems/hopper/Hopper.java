@@ -41,8 +41,8 @@ public class Hopper extends SubsystemBase {
   private static final double SLIDE_RETRACT_SPEED = -1;
   private static final int SLIDE_CURRENT_LIMIT = 20;
 
-  // TODO: measure this — start fully extended, zero encoder, retract until closed, read value
-  private static final double SLIDE_TRAVEL_ROTATIONS = 0.0; // output shaft rotations (TBD)
+  // Robot starts closed @ 0
+  private static final double SLIDE_TRAVEL_MAX_POS = 4.5;
 
   public Hopper() {
     // Conveyor — currently removed
@@ -127,7 +127,7 @@ public class Hopper extends SubsystemBase {
 
       if (m_slideExtended) {
         return this.run(this::extendSlide)
-            .until(() -> getSlidePosition() >= SLIDE_TRAVEL_ROTATIONS)
+            .until(() -> getSlidePosition() >= SLIDE_TRAVEL_MAX_POS)
             .andThen(this.runOnce(this::stopSlide));
       } else {
         return this.run(this::retractSlide)

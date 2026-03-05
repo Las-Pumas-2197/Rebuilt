@@ -101,16 +101,6 @@ public class RobotContainer {
         m_joystick.povRight().whileTrue(run(() -> m_turret.nudgeTargetYaw(Math.toRadians(1.5)), m_turret));
     }
 
-    private void runAllIntake() {
-        m_feeder.runFeeder();
-        // m_hopper.runConveyor(); // conveyor currently removed
-    }
-
-    private void stopAllIntake() {
-        m_feeder.stopAllFeeder();
-        // m_hopper.stopConveyor(); // conveyor currently removed
-    }
-
     private boolean hasManualDriveInput() {
         final double deadband = 0.2;
         return Math.abs(m_joystick.getLeftX()) > deadband
