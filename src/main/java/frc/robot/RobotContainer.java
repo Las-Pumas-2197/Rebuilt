@@ -72,15 +72,21 @@ public class RobotContainer {
         m_joystick.start().whileTrue(run(() -> BlackBox.DataRecorder.recordData("heading", m_swerve.getGyroHeading())));
         // m_joystick.a().onTrue(CycleCommands.createCycleCommand(m_swerve, m_turret, this::hasManualDriveInput));
 
-        // hopper extension bindings
-        m_joystick.povUp().whileTrue(runEnd(() -> m_intake.extendSlide(), () -> m_intake.stopSlide(), m_hopper));
-        m_joystick.povDown().whileTrue(runEnd(() -> m_intake.retractSlide(), () -> m_intake.stopSlide(), m_intake));
+        // hopper slide bindings (slide motor now in Hopper)
+        m_joystick.povUp().whileTrue(runEnd(() -> m_hopper.extendSlide(), () -> m_hopper.stopSlide(), m_hopper));
+        m_joystick.povDown().whileTrue(runEnd(() -> m_hopper.retractSlide(), () -> m_hopper.stopSlide(), m_hopper));
 
         // intake roller
         m_joystick.a().whileTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
-        // hopper
-        m_joystick.y().whileTrue(runEnd(() -> m_hopper.runConveyor(), () -> m_hopper.stopConveyor(), m_hopper));
+        // hopper conveyor — currently removed
+        // m_joystick.y().whileTrue(runEnd(() -> m_hopper.runConveyor(), () -> m_hopper.stopConveyor(), m_hopper));
+
+        // Zero slide encoder (for measuring travel distance)
+        m_joystick.y().onTrue(runOnce(() -> m_hopper.zeroSlideEncoder(), m_hopper));
         
+        // Toggle slide extend/retract by position
+        m_joystick.b().onTrue(m_hopper.slideCommand());
+
         // Feed belt and kicker
         m_joystick.x().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));
 
@@ -97,12 +103,12 @@ public class RobotContainer {
 
     private void runAllIntake() {
         m_feeder.runFeeder();
-        m_hopper.runConveyor();
+        // m_hopper.runConveyor(); // conveyor currently removed
     }
 
     private void stopAllIntake() {
         m_feeder.stopAllFeeder();
-        m_hopper.stopConveyor();
+        // m_hopper.stopConveyor(); // conveyor currently removed
     }
 
     private boolean hasManualDriveInput() {
