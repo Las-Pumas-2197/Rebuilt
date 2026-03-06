@@ -150,9 +150,9 @@ public final class Constants {
     // Camera transforms (position relative to robot center)
     public static final List<Transform3d> k_cameraintrinsics = List.of(
         new Transform3d(
-            Units.inchesToMeters(12),
-            Units.inchesToMeters(12),
-            Units.inchesToMeters(8),
+            Units.inchesToMeters(12), // X - fwd/bckwd
+            Units.inchesToMeters(12), // Y - left/right
+            Units.inchesToMeters(8), // Z
             new Rotation3d(0, Units.degreesToRadians(-20), Units.degreesToRadians(45))),
         new Transform3d(
             Units.inchesToMeters(12),
@@ -184,13 +184,21 @@ public final class Constants {
         .loadField(AprilTagFields.k2026RebuiltAndymark);
 
     // Standard deviations for pose estimation
-    public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(0.01, 0.01, 0.01);
-    public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.00, 0.00, 0.00);
+    public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(0.015, 0.015, 0.015);
+    public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.01, 0.01, 0.01);
     public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(
         Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
 
     // Limelight name (NetworkTables key)
     public static final String k_limelightname = "limelight";
+
+    // Limelight camera position relative to robot center
+    public static final double k_llForward = Units.inchesToMeters(15);
+    public static final double k_llSide = Units.inchesToMeters(0);    
+    public static final double k_llUp = Units.inchesToMeters(12);     
+    public static final double k_llRoll = 0.0;                         
+    public static final double k_llPitch = 0.0;
+    public static final double k_llYaw = 0.0;                          
 
     // Turret camera configuration
     public static final String k_turretcameraname = "turret_camera";
@@ -209,6 +217,7 @@ public final class Constants {
     public static final Pose2d k_redreefA = new Pose2d(16, 4, new Rotation2d(Units.degreesToRadians(0)));
     public static final Pose2d k_fieldCenter = new Pose2d(8.27, 4.0, new Rotation2d(0));
     public static final Pose2d k_basinCenter = new Pose2d(4.5, 4.0, new Rotation2d(0));
+    public static final Pose2d k_redBasinCenter = new Pose2d(16.54 - 4.5, 4.0, new Rotation2d(0));
 
     // Simple square auto waypoints
     public static final Pose2d k_squarePoint1 = new Pose2d(1.5, 1, new Rotation2d(0));

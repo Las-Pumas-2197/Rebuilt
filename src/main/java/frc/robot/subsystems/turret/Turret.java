@@ -129,7 +129,7 @@ public class Turret extends SubsystemBase {
   }
 
   public boolean areFlywheelsAtSpeed() {
-    // TODO: Check actual RPM from encoder when tuned
+    // check actual RPM from encoder to tune
     return Math.abs(m_flywheelLeft.getAppliedOutput()) > 0.85;
   }
 

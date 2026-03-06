@@ -7,6 +7,9 @@ package frc.robot;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 import static frc.robot.utils.Constants.OIConstants.*;
 import static frc.robot.utils.Constants.PathfindingConstants.k_basinCenter;
+import static frc.robot.utils.Constants.PathfindingConstants.k_redBasinCenter;
+
+import edu.wpi.first.math.geometry.Pose2d;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -46,6 +49,9 @@ public class RobotContainer {
     // private final Turret m_turret = new Turret();
     // private final Telemetry m_telemetry = new Telemetry(m_vision, m_swerve);
 
+    // Alliance chooser — determines turret tracking target
+    private final SendableChooser<Pose2d> m_allianceChooser = new SendableChooser<>();
+
     // Auto chooser
     private final SendableChooser<Command> m_autochooser = new SendableChooser<>();
 
@@ -53,6 +59,11 @@ public class RobotContainer {
         // Configure pathfinding
         Pathfinding.setPathfinder(new LocalADStar());
         m_swerve.runAutoBuilder();
+
+        // Alliance selector for turret target
+        m_allianceChooser.setDefaultOption("Blue", k_basinCenter);
+        m_allianceChooser.addOption("Red", k_redBasinCenter);
+        SmartDashboard.putData("Alliance", m_allianceChooser);
 
         // Configure autos
         // m_autochooser.setDefaultOption("square", Autos.simpleSquareAuto(m_swerve, m_turret));
@@ -126,7 +137,7 @@ public class RobotContainer {
         Command turretTrackingCommand = run(() -> {
             // m_turret.aimAtFieldPoseWithLead(
             //     m_swerve.getPose(),
-            //     k_basinCenter,
+            //     getTargetPose(),
             //     m_swerve.getFieldSpeeds()
             // );
         });
@@ -136,6 +147,11 @@ public class RobotContainer {
 
     public Command getAutonomousCommand() {
         return m_autochooser.getSelected();
+    }
+
+    /** Returns the turret target pose based on the alliance chooser. */
+    public Pose2d getTargetPose() {
+        return m_allianceChooser.getSelected();
     }
 
     public void testRun() {}

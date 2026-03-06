@@ -34,6 +34,11 @@ public class LimelightCamera extends SubsystemBase {
   public LimelightCamera(String name, DoubleSupplier yawDegreesSupplier) {
     m_name = name;
     m_yawDegreesSupplier = yawDegreesSupplier;
+
+    // Set the camera's physical position on the robot so MegaTag2 can compute robot pose correctly
+    LimelightHelpers.setCameraPose_RobotSpace(m_name,
+        k_llForward, k_llSide, k_llUp,
+        k_llRoll, k_llPitch, k_llYaw);
   }
 
   /** Calculates standard deviations for the Limelight estimate based on tag metrics. */
