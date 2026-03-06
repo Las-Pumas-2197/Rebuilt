@@ -60,13 +60,13 @@ public class Turret extends SubsystemBase {
   private static final double ROTATION_KI = 0.0;
   private static final double ROTATION_KD = 0.1;
 
-  // Shooting physics constants
-  private static final double LAUNCH_ANGLE      = Math.toRadians(65); // fixed launch angle (rad)
-  private static final double LAUNCH_HEIGHT      = 0.3;    // turret exit height (m)
-  private static final double HUB_TARGET_HEIGHT  = 1.5748; // hub opening height (m)
-  private static final double MIN_EXIT_VELOCITY  = 3.0;    // m/s
-  private static final double MAX_EXIT_VELOCITY  = 15.0;   // m/s
-  private static final double GRAVITY            = 9.81;   // m/s²
+  // Flywheel speed calibration — two tested (distance, motor speed) pairs
+  private static final double CALIB_DIST_CLOSE  = 2.0;   // close test distance (m)
+  private static final double CALIB_SPEED_CLOSE = 0.35;  // motor speed that scored at close distance
+  private static final double CALIB_DIST_FAR    = 5.0;   // far test distance (m)
+  private static final double CALIB_SPEED_FAR   = 0.7;   // motor speed that scored at far distance
+  private static final double FLYWHEEL_MIN_SPEED = 0.3;  // minimum flywheel output
+  private static final double FLYWHEEL_MAX_SPEED = 0.8;  // maximum flywheel output
 
   public Turret() {
     // Initialize motors
@@ -184,38 +184,21 @@ public class Turret extends SubsystemBase {
     m_flywheelRight.stopMotor();
   }
 
-  // ===== Shooting Physics =====
+  // ===== Flywheel Speed Interpolation =====
 
   /**
-   * Calculates the exit velocity required to reach a target at the given
-   * horizontal distance, using projectile motion with the fixed launch angle.
+   * Linearly interpolates flywheel motor speed from two calibration points.
+   * Extrapolates beyond the calibrated range, clamped to [MIN, MAX].
    *
-   * v² = g·d² / (2·cos²θ · (d·tanθ − Δh))
-   *
-   * @param horizontalDistance Horizontal distance to target (m)
-   * @return Clamped exit velocity in m/s
+   * @param distance Horizontal distance to target (m)
+   * @return Motor speed (0–1)
    */
-  public double calculateRequiredExitVelocity(double horizontalDistance) {
-    double deltaH     = HUB_TARGET_HEIGHT - LAUNCH_HEIGHT;
-    double tanAngle   = Math.tan(LAUNCH_ANGLE);
-    double cosAngle   = Math.cos(LAUNCH_ANGLE);
-    double denominator = 2.0 * cosAngle * cosAngle * (horizontalDistance * tanAngle - deltaH);
-
-    if (denominator <= 0) {
-      return MAX_EXIT_VELOCITY; // target unreachable at this angle — use max
-    }
-
-    double velocity = Math.sqrt(GRAVITY * horizontalDistance * horizontalDistance / denominator);
-    return Math.max(MIN_EXIT_VELOCITY, Math.min(MAX_EXIT_VELOCITY, velocity));
-  }
-
-  /**
-   * Maps a required exit velocity to a flywheel motor output (0–1).
-   * Uses a linear mapping anchored at MAX_EXIT_VELOCITY → FLYWHEEL_SHOOT_SPEED.
-   */
-  private double velocityToMotorSpeed(double exitVelocity) {
-    double speed = (exitVelocity / MAX_EXIT_VELOCITY) * FLYWHEEL_SHOOT_SPEED;
-    return Math.max(FLYWHEEL_IDLE_SPEED, Math.min(FLYWHEEL_SHOOT_SPEED, speed));
+  public double interpolateFlywheelSpeed(double distance) {
+    double speed = CALIB_SPEED_CLOSE
+        + (distance - CALIB_DIST_CLOSE)
+        * (CALIB_SPEED_FAR - CALIB_SPEED_CLOSE)
+        / (CALIB_DIST_FAR - CALIB_DIST_CLOSE);
+    return Math.max(FLYWHEEL_MIN_SPEED, Math.min(FLYWHEEL_MAX_SPEED, speed));
   }
 
   // ===== Aiming Methods =====
@@ -288,17 +271,18 @@ public class Turret extends SubsystemBase {
       Pose2d targetPose,
       ChassisSpeeds fieldRelativeSpeeds) {
 
-    double distance    = robotPose.getTranslation().getDistance(targetPose.getTranslation());
-    double exitVelocity = calculateRequiredExitVelocity(distance);
+    double distance     = robotPose.getTranslation().getDistance(targetPose.getTranslation());
+    double motorSpeed   = interpolateFlywheelSpeed(distance);
 
-    // Spin flywheels to the speed required for this distance
-    setFlywheelSpeed(velocityToMotorSpeed(exitVelocity));
+    // Spin flywheels to the interpolated speed for this distance
+    setFlywheelSpeed(motorSpeed);
 
-    // Aim with lead correction using the calculated velocity
+    // Aim with lead correction — use motor speed as a rough proxy for horizontal velocity
+    double horizontalVelocity = motorSpeed * 10.0; // rough m/s estimate, tune if lead matters
     setTargetYaw(calculateLeadCorrectedAngle(
-        robotPose, targetPose, fieldRelativeSpeeds, exitVelocity, LAUNCH_ANGLE));
+        robotPose, targetPose, fieldRelativeSpeeds, horizontalVelocity, 0));
 
-    SmartDashboard.putNumber("Turret/ExitVelocity", exitVelocity);
+    SmartDashboard.putNumber("Turret/FlywheelInterpolated", motorSpeed);
     SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
   }
 

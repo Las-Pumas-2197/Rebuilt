@@ -72,7 +72,7 @@ public class RobotContainer {
         SmartDashboard.putData(m_autochooser);
 
         // Default commands
-        // m_swerve.setDefaultCommand(swerveDefaultCommand());
+        m_swerve.setDefaultCommand(swerveDefaultCommand());
         // m_vision.setDefaultCommand(visionDefaultCommand());
 
         configureBindings();
