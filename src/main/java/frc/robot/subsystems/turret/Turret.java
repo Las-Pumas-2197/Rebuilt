@@ -12,9 +12,12 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -34,7 +37,9 @@ public class Turret extends SubsystemBase {
   private final SparkFlex m_rotationMotor;
 
   // PID for turret rotation position control
-  private final PIDController m_rotationPID;
+  private final TrapezoidProfile.Constraints m_rotationConstraints;
+  private final ProfiledPIDController m_rotationPID;
+  private final SimpleMotorFeedforward m_rotationFF;
 
   // Turret state — encoder starts at 0 on boot (turret at home position)
   private double m_targetYaw = 0.0;
@@ -56,9 +61,11 @@ public class Turret extends SubsystemBase {
   private static final double TURRET_GEAR_RATIO = 10.0;
 
   // PID constants for rotation
-  private static final double ROTATION_KP = 2.0;
+  private static final double ROTATION_KP = 3;
   private static final double ROTATION_KI = 0.0;
   private static final double ROTATION_KD = 0.1;
+  private static final double ROTATION_KS = 0.2;
+  private static final double ROTATION_KV = 0.1689;
 
   // Flywheel speed calibration — two tested (distance, motor speed) pairs
   private static final double CALIB_DIST_CLOSE  = 2.0;   // close test distance (m)
@@ -75,7 +82,9 @@ public class Turret extends SubsystemBase {
     m_rotationMotor = new SparkFlex(CANIDs.TURRET_ROTATION,       MotorType.kBrushless);
 
     // Initialize PID controller
-    m_rotationPID = new PIDController(ROTATION_KP, ROTATION_KI, ROTATION_KD);
+    m_rotationConstraints = new TrapezoidProfile.Constraints(11.306*Math.PI, 10*Math.PI);
+    m_rotationPID = new ProfiledPIDController(ROTATION_KP, ROTATION_KI, ROTATION_KD, m_rotationConstraints);
+    m_rotationFF = new SimpleMotorFeedforward(ROTATION_KS, ROTATION_KV);
     m_rotationPID.enableContinuousInput(-Math.PI, Math.PI);
     m_rotationPID.setTolerance(Math.toRadians(2.0));
 
@@ -101,6 +110,7 @@ public class Turret extends SubsystemBase {
     SparkFlexConfig rotationConfig = new SparkFlexConfig();
     rotationConfig.idleMode(IdleMode.kBrake);
     rotationConfig.smartCurrentLimit(ROTATION_CURRENT_LIMIT);
+    rotationConfig.inverted(true);
     // Convert encoder position to turret radians directly
     rotationConfig.encoder.positionConversionFactor((2 * Math.PI) / TURRET_GEAR_RATIO);
     m_rotationMotor.configure(rotationConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -286,6 +296,19 @@ public class Turret extends SubsystemBase {
     SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
   }
 
+  public void turretCL(double vel, double pos) {
+    m_rotationPID.setGoal(clampYaw(pos)); 
+    double turretPIDout = (m_rotationPID.calculate(m_currentYaw) / (2*Math.PI)) * 12;
+    double turretFFout = m_rotationFF.calculate(m_rotationPID.getSetpoint().velocity);
+    SmartDashboard.putNumber("turret FF out", turretFFout);
+    SmartDashboard.putNumber("turret PID out", turretPIDout);
+    SmartDashboard.putNumber("turret vel", vel);
+    m_rotationMotor.setVoltage(turretFFout + turretPIDout);
+
+    // m_flywheelLeft.setVoltage(vel * 12);
+    // m_flywheelRight.setVoltage(vel * 12);
+  }
+
   // ===== Combined Operations =====
 
   public void stopAll() {
@@ -345,10 +368,11 @@ public class Turret extends SubsystemBase {
   public void periodic() {
     // Read current turret angle from encoder (radians, zeroed at home position)
     m_currentYaw = m_rotationMotor.getEncoder().getPosition();
+    
 
     // Run rotation PID control
-    double rotationOutput = m_rotationPID.calculate(m_currentYaw, m_targetYaw);
-    m_rotationMotor.set(rotationOutput);
+    // double rotationOutput = m_rotationPID.calculate(m_currentYaw, m_targetYaw);
+    // m_rotationMotor.set(rotationOutput);
 
     // Telemetry
     SmartDashboard.putNumber("Turret/TargetYaw",           Math.toDegrees(m_targetYaw));

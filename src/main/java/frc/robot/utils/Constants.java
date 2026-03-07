@@ -150,33 +150,33 @@ public final class Constants {
     // Camera transforms (position relative to robot center)
     public static final List<Transform3d> k_cameraintrinsics = List.of(
         new Transform3d(
-            Units.inchesToMeters(12), // X - fwd/bckwd
-            Units.inchesToMeters(12), // Y - left/right
-            Units.inchesToMeters(8), // Z
-            new Rotation3d(0, Units.degreesToRadians(-20), Units.degreesToRadians(45))),
+            Units.inchesToMeters(15.1875), // X - fwd/bckwd
+            Units.inchesToMeters(14.75), // Y - left/right
+            Units.inchesToMeters(20), // Z
+            new Rotation3d(0, Units.degreesToRadians(0), Units.degreesToRadians(45))),
         new Transform3d(
-            Units.inchesToMeters(12),
-            Units.inchesToMeters(-12),
-            Units.inchesToMeters(8),
-            new Rotation3d(0, Units.degreesToRadians(-20), Units.degreesToRadians(-45))),
+            Units.inchesToMeters(15.1875),
+            Units.inchesToMeters(-14.75),
+            Units.inchesToMeters(20),
+            new Rotation3d(0, Units.degreesToRadians(0), Units.degreesToRadians(-45))),
         new Transform3d(
-            Units.inchesToMeters(-12),
-            Units.inchesToMeters(12),
-            Units.inchesToMeters(8),
-            new Rotation3d(0, Units.degreesToRadians(-20), Units.degreesToRadians(135))),
+            Units.inchesToMeters(-9.75),
+            Units.inchesToMeters(14.75),
+            Units.inchesToMeters(6.5),
+            new Rotation3d(0, Units.degreesToRadians(-30), Units.degreesToRadians(135))),
         new Transform3d(
-            Units.inchesToMeters(-12),
-            Units.inchesToMeters(-12),
-            Units.inchesToMeters(8),
-            new Rotation3d(0, Units.degreesToRadians(-20), Units.degreesToRadians(-135)))
+            Units.inchesToMeters(-9.75),
+            Units.inchesToMeters(-14.75),
+            Units.inchesToMeters(6.5),
+            new Rotation3d(0, Units.degreesToRadians(-30), Units.degreesToRadians(-135)))
     );
 
     // Camera names
     public static final List<String> k_cameranames = List.of(
-        "frontleft_camera",
-        "frontright_camera",
-        "rearleft_camera",
-        "rearright_camera"
+        "Arducam_OV9281_FL",
+        "Arducam_OV9281_FR",
+        "Arducam_OV9281_RL",
+        "Arducam_OV9281_RR"
     );
 
     // AprilTag layout
@@ -185,7 +185,7 @@ public final class Constants {
 
     // Standard deviations for pose estimation
     public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(0.015, 0.015, 0.015);
-    public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.01, 0.01, 0.01);
+    public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.00, 0.00, 0.00);
     public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(
         Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
 

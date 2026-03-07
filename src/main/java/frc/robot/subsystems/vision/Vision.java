@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import static frc.robot.utils.Constants.VisionConstants.*;
@@ -43,15 +44,16 @@ public class Vision extends SubsystemBase {
   /** Get a list of all of the estimates from all camera pipelines (PhotonVision + Limelight). */
   public List<Pair<Optional<EstimatedRobotPose>, Matrix<N3, N1>>> getEstimates() {
     List<Pair<Optional<EstimatedRobotPose>, Matrix<N3, N1>>> estimates = new ArrayList<>();
+    estimates.clear();
     for (var camera : m_cameras) {
       if (camera.getEstimate().getFirst().isPresent()) {
         estimates.add(camera.getEstimate());
       }
     }
-    var llEstimate = m_limelight.getEstimate();
-    if (llEstimate.getFirst().isPresent()) {
-      estimates.add(llEstimate);
-    }
+    // var llEstimate = m_limelight.getEstimate();
+    // if (llEstimate.getFirst().isPresent()) {
+    //   estimates.add(llEstimate);
+    // }
     return estimates;
   }
 
@@ -122,5 +124,7 @@ public class Vision extends SubsystemBase {
 
   @Override
   public void periodic() {
+    SmartDashboard.putBoolean("RR camera has results", m_cameras.get(3).getResults().isPresent());
+    SmartDashboard.putBoolean("RR camera has estimate", m_cameras.get(3).getEstimate().getFirst().isPresent());
   }
 }

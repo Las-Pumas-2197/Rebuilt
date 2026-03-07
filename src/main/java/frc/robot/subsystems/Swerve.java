@@ -29,6 +29,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import swervelib.SwerveDrive;
@@ -130,6 +131,7 @@ public class Swerve extends SubsystemBase {
     for (var estimate : estimates) {
       estimate.getFirst().ifPresent(est -> {
         m_swervedrive.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, estimate.getSecond());
+        SmartDashboard.putNumber("data", est.targetsUsed.size());
       });
     }
   }
@@ -173,5 +175,6 @@ public class Swerve extends SubsystemBase {
   @Override
   public void periodic() {
     m_swervedrive.updateOdometry();
+    // m_swervedrive.field.setRobotPose(m_swervedrive.getPose());
   }
 }

@@ -13,12 +13,15 @@ import edu.wpi.first.math.geometry.Pose2d;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
@@ -38,6 +41,7 @@ public class RobotContainer {
 
     // Controllers
     private final CommandXboxController m_joystick = new CommandXboxController(k_joystickport);
+    private final CommandXboxController m_joystick2 = new CommandXboxController(1);
 
     // Subsystems
     private final Swerve m_swerve = new Swerve();
@@ -45,15 +49,17 @@ public class RobotContainer {
     private final Intake m_intake = new Intake();
     private final Turret m_turret = new Turret();
     private final Feeder m_feeder = new Feeder();
-    // private final Vision m_vision = new Vision(() -> m_swerve.getGyroHeading().getDegrees());
-    // private final Turret m_turret = new Turret();
-    // private final Telemetry m_telemetry = new Telemetry(m_vision, m_swerve);
+    private final Vision m_vision = new Vision(() -> m_swerve.getGyroHeading().getDegrees());
+    private final Telemetry m_telemetry = new Telemetry(m_vision, m_swerve);
 
     // Alliance chooser — determines turret tracking target
     private final SendableChooser<Pose2d> m_allianceChooser = new SendableChooser<>();
 
     // Auto chooser
     private final SendableChooser<Command> m_autochooser = new SendableChooser<>();
+
+    private double turretTargetPos = 0.0;
+    private double turretTargetVel = 0.0;
 
     public RobotContainer() {
         // Configure pathfinding
@@ -73,6 +79,7 @@ public class RobotContainer {
 
         // Default commands
         m_swerve.setDefaultCommand(swerveDefaultCommand());
+        m_turret.setDefaultCommand(turretDefaultCommand());
         // m_vision.setDefaultCommand(visionDefaultCommand());
 
         configureBindings();
@@ -80,7 +87,7 @@ public class RobotContainer {
 
     private void configureBindings() {
         m_joystick.back().onTrue(runOnce(() -> m_swerve.getCurrentCommand().cancel()));
-        m_joystick.start().whileTrue(run(() -> BlackBox.DataRecorder.recordData("heading", m_swerve.getGyroHeading())));
+        // m_joystick.start().whileTrue(run(() -> BlackBox.DataRecorder.recordData("heading", m_swerve.getGyroHeading())));
         // m_joystick.a().onTrue(CycleCommands.createCycleCommand(m_swerve, m_turret, this::hasManualDriveInput));
 
         // hopper slide bindings (slide motor now in Hopper)
@@ -88,7 +95,7 @@ public class RobotContainer {
         m_joystick.povDown().whileTrue(runEnd(() -> m_hopper.retractSlide(), () -> m_hopper.stopSlide(), m_hopper));
 
         // intake roller
-        m_joystick.a().whileTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
+        m_joystick.a().toggleOnTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
         // hopper conveyor — currently removed
         // m_joystick.y().whileTrue(runEnd(() -> m_hopper.runConveyor(), () -> m_hopper.stopConveyor(), m_hopper));
 
@@ -99,17 +106,22 @@ public class RobotContainer {
         m_joystick.b().onTrue(m_hopper.slideCommand());
 
         // Feed belt and kicker
-        m_joystick.x().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));
+        m_joystick2.rightTrigger().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));
 
         // turret
-        m_joystick.rightTrigger().whileTrue(runEnd(() -> m_turret.spinUpFlywheels(), () -> m_turret.stopAllShooter(), m_turret));
+        // m_joystick.rightTrigger().whileTrue(runEnd(() -> m_turret.spinUpFlywheels(), () -> m_turret.stopAllShooter(), m_turret));
 
-        m_joystick.start().onTrue(runOnce(() -> m_turret.setFlywheelSpeed(0.5), m_turret));
-        m_joystick.back().onTrue(runOnce(() -> m_turret.setFlywheelSpeed(0), m_turret));
+        // m_joystick.start().onTrue(runOnce(() -> m_turret.setFlywheelSpeed(0.5), m_turret));
+        // m_joystick.back().onTrue(runOnce(() -> m_turret.setFlywheelSpeed(0), m_turret));
 
-        // turret manual rotation — nudges target yaw so PID+limits stay in control
-        m_joystick.povLeft().whileTrue(run(() -> m_turret.nudgeTargetYaw(-Math.toRadians(1.5)), m_turret));
-        m_joystick.povRight().whileTrue(run(() -> m_turret.nudgeTargetYaw(Math.toRadians(1.5)), m_turret));
+        // // turret manual rotation — nudges target yaw so PID+limits stay in control
+        // m_joystick.povLeft().whileTrue(run(() -> m_turret.nudgeTargetYaw(-Math.toRadians(1.5)), m_turret));
+        // m_joystick.povRight().whileTrue(run(() -> m_turret.nudgeTargetYaw(Math.toRadians(1.5)), m_turret));
+
+        // m_joystick.leftBumper().onTrue(runOnce(() -> turretTargetPos = -0.6*Math.PI));
+        // m_joystick.rightBumper().onTrue(runOnce(() -> turretTargetPos = 0));
+
+        // new Trigger(() -> RobotState.isEnabled()).whileTrue(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
     }
 
     private boolean hasManualDriveInput() {
@@ -119,31 +131,33 @@ public class RobotContainer {
             || Math.abs(m_joystick.getRightX()) > deadband;
     }
 
-    private ParallelCommandGroup visionDefaultCommand() {
-        ParallelCommandGroup cmd = new ParallelCommandGroup();
-        // cmd.addCommands(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
-        // cmd.addRequirements(m_vision);
-        return cmd;
-    }
+    // private ParallelCommandGroup visionDefaultCommand() {
+    //     ParallelCommandGroup cmd = new ParallelCommandGroup();
+    //     cmd.addCommands(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
+    //     cmd.addRequirements(m_vision);
+    //     return cmd;
+    // }
 
-    private Command swerveDefaultCommand() {
-        Command driveCommand = new RunCommand(
-            () -> m_swerve.drive(new ChassisSpeeds(
+    private ParallelCommandGroup swerveDefaultCommand() {
+        return new ParallelCommandGroup (
+            run(() -> m_swerve.drive(new ChassisSpeeds(
                 -MathUtil.applyDeadband(m_joystick.getLeftY(), 0.2) * k_maxlinspeedteleop,
                 -MathUtil.applyDeadband(m_joystick.getLeftX(), 0.2) * k_maxlinspeedteleop,
                 -MathUtil.applyDeadband(m_joystick.getRightX(), 0.2) * k_maxrotspeedteleop)),
-            m_swerve);
-
-        Command turretTrackingCommand = run(() -> {
-            // m_turret.aimAtFieldPoseWithLead(
-            //     m_swerve.getPose(),
-            //     getTargetPose(),
-            //     m_swerve.getFieldSpeeds()
-            // );
-        });
-
-        return new ParallelCommandGroup(driveCommand, turretTrackingCommand);
+            m_swerve),
+            run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates()))
+            );
     }
+
+    private Command turretDefaultCommand() {
+        return new RunCommand(
+            () -> m_turret.turretCL(
+                turretTargetVel,
+                turretTargetPos
+        ), m_turret);
+    }
+
+
 
     public Command getAutonomousCommand() {
         return m_autochooser.getSelected();

@@ -16,6 +16,7 @@ import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 import edu.wpi.first.math.Matrix;
@@ -24,6 +25,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class VisionCamera extends SubsystemBase {
@@ -38,6 +40,8 @@ public class VisionCamera extends SubsystemBase {
   public VisionCamera(String name, Transform3d intrinsics) {
     m_camera = new PhotonCamera(name);
     m_estimator = new PhotonPoseEstimator(k_fieldlayout, intrinsics);
+    m_estimator.setPrimaryStrategy(PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR);
+    m_estimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
   }
 
   /**
@@ -144,9 +148,11 @@ public class VisionCamera extends SubsystemBase {
     }
 
     results.ifPresentOrElse(result -> {
-      m_estimator.update(result).ifPresent(est -> {
-        estimate = Pair.of(Optional.of(est), calculateStdDevs(est, result));
+      m_estimator.estimateCoprocMultiTagPose(result).ifPresent(est -> {
+        estimate = Pair.of(Optional.of(est), k_multitagstddevs);
       });
     }, () -> estimate = Pair.of(Optional.empty(), k_ignorestddevs));
+
+
   }
 }
