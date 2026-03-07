@@ -167,21 +167,32 @@ public class VisionCamera extends SubsystemBase {
     return m_camera.isConnected();
   }
 
+  /** Returns a boolean that states the presence of camera results. */
+  public boolean hasResult() {
+    return results.isPresent();
+  }
+
+  /** Returns a boolean that states the presence of a robot pose estimate. */
+  public boolean hasEstimate() {
+    return estimate.getFirst().isPresent();
+  }
+
   @Override
   public void periodic() {
 
     // clear results and update them
+    results = Optional.empty();
     for (var result : m_camera.getAllUnreadResults()) {
       results = Optional.of(result);
     }
 
     // check if results are present for each camera, if yes, perform heuristics and
     // compose estimate
-    results.ifPresentOrElse(result -> {
+    estimate = Pair.of(Optional.empty(), k_ignorestddevs);
+    results.ifPresent(result -> {
       m_estimator.update(result).ifPresent(est -> {
-        estimate = Pair.of(Optional.of(est), calculateStdDevs(est, result));
-      });
-    }, () -> estimate = Pair.of(Optional.empty(), k_ignorestddevs)); // empty estimate and set stddevs to
-                                                                     // ignore
+        // estimate = Pair.of(Optional.of(est), calculateStdDevs(est, result));
+        estimate = Pair.of(Optional.of(est), k_multitagstddevs); // ignore heuristics for now
+      });});
   }
 }

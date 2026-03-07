@@ -296,18 +296,41 @@ public class Turret extends SubsystemBase {
     SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
   }
 
+
+
+
+
+
+
+
+
+
+
+
   public void turretCL(double vel, double pos) {
     m_rotationPID.setGoal(clampYaw(pos)); 
     double turretPIDout = (m_rotationPID.calculate(m_currentYaw) / (2*Math.PI)) * 12;
     double turretFFout = m_rotationFF.calculate(m_rotationPID.getSetpoint().velocity);
-    SmartDashboard.putNumber("turret FF out", turretFFout);
-    SmartDashboard.putNumber("turret PID out", turretPIDout);
-    SmartDashboard.putNumber("turret vel", vel);
-    m_rotationMotor.setVoltage(turretFFout + turretPIDout);
+    // SmartDashboard.putNumber("turret FF out", turretFFout);
+    // SmartDashboard.putNumber("turret PID out", turretPIDout);
+    // SmartDashboard.putNumber("turret vel", vel);
 
+    m_rotationMotor.setVoltage(turretFFout + turretPIDout);
     m_flywheelLeft.setVoltage(vel * 12);
     m_flywheelRight.setVoltage(vel * 12);
   }
+
+
+
+
+
+
+
+
+
+
+
+
 
   // ===== Combined Operations =====
 

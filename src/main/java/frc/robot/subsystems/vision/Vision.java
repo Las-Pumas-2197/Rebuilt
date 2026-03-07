@@ -126,7 +126,7 @@ public class Vision extends SubsystemBase {
    *
    * @param pose The simulation's physical pose of the robot.
    */
-  public void updatePose(Pose2d pose) {
+  public void updateSimPose(Pose2d pose) {
     if (m_visionsim != null) {
       m_visionsim.update(pose);
     }

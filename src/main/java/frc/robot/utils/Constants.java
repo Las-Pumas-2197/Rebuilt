@@ -4,6 +4,8 @@
 
 package frc.robot.utils;
 
+import static frc.robot.utils.Constants.SwerveDriveConstants.k_maxlinspeed;
+
 import java.util.List;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -66,9 +68,9 @@ public final class Constants {
    * SDS MK5i swerve module constants (with NEO Vortex motors).
    */
   public static final class ModuleConstants {
-    // Gear ratios (MK5i L2)
-    public static final double kDrivingMotorReduction = 6.75;
-    public static final double kTurningMotorReduction = 150.0 / 7.0; // ~21.43:1
+    // Gear ratios (MK5i R3)
+    public static final double kDrivingMotorReduction = 5.27;
+    public static final double kTurningMotorReduction = 26;
 
     // Wheel specifications
     public static final double kWheelDiameterInches = 4.0;
@@ -87,7 +89,7 @@ public final class Constants {
 
     // Current limits
     public static final int kDriveCurrentLimit = 60;
-    public static final int kTurnCurrentLimit = 30;
+    public static final int kTurnCurrentLimit = 40;
 
     // Encoder offsets
     public static final double kFrontLeftEncoderOffset = 0.0;
@@ -141,6 +143,7 @@ public final class Constants {
     public static final int k_joystickport = 0;
     public static final double k_maxlinspeedteleop = 3.0; // m/s
     public static final double k_maxrotspeedteleop = 2 * Math.PI; // rad/s
+    public static final double k_maxlinspeedturbo = k_maxlinspeed;
   }
 
   /**
@@ -184,8 +187,8 @@ public final class Constants {
         .loadField(AprilTagFields.k2026RebuiltAndymark);
 
     // Standard deviations for pose estimation
-    public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(0.015, 0.015, 0.015);
-    public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.00, 0.00, 0.00);
+    public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(0.5, 0.5, 0.5);
+    public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.05, 0.05, 0.05);
     public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(
         Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
 

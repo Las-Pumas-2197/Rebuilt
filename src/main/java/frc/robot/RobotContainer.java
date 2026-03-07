@@ -34,7 +34,6 @@ import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.vision.Vision;
-import frc.robot.utils.BlackBox;
 import frc.robot.utils.Telemetry;
 
 public class RobotContainer {
@@ -44,12 +43,13 @@ public class RobotContainer {
     private final CommandXboxController m_joystick2 = new CommandXboxController(1);
 
     // Subsystems
+    private final Vision m_vision = new Vision();
     private final Swerve m_swerve = new Swerve();
     private final Hopper m_hopper = new Hopper();
     private final Intake m_intake = new Intake();
     private final Turret m_turret = new Turret();
     private final Feeder m_feeder = new Feeder();
-    private final Vision m_vision = new Vision();
+
     private final Telemetry m_telemetry = new Telemetry(m_vision, m_swerve);
 
     // Alliance chooser — determines turret tracking target
@@ -78,9 +78,10 @@ public class RobotContainer {
         SmartDashboard.putData(m_autochooser);
 
         // Default commands
+        m_vision.setDefaultCommand(visionDefaultCommand());
         m_swerve.setDefaultCommand(swerveDefaultCommand());
         m_turret.setDefaultCommand(turretDefaultCommand());
-        m_vision.setDefaultCommand(visionDefaultCommand());
+
 
         configureBindings();
     }
@@ -132,8 +133,8 @@ public class RobotContainer {
 
     private ParallelCommandGroup visionDefaultCommand() {
         ParallelCommandGroup cmd = new ParallelCommandGroup();
-                if (RobotBase.isSimulation())
-        cmd.addCommands(run(() -> m_vision.updatePose(m_swerve.getSimPose())));
+            if (RobotBase.isSimulation())
+        cmd.addCommands(run(() -> m_vision.updateSimPose(m_swerve.getSimPose())));
         cmd.addCommands(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
         cmd.addRequirements(m_vision);
         return cmd;
