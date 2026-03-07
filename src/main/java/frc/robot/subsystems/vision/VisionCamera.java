@@ -169,7 +169,8 @@ public class VisionCamera extends SubsystemBase {
 
   @Override
   public void periodic() {
-
+    results = Optional.empty();
+    
     // clear results and update them
     for (var result : m_camera.getAllUnreadResults()) {
       results = Optional.of(result);
