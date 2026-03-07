@@ -13,6 +13,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotState;
@@ -22,9 +24,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 
@@ -60,13 +64,27 @@ public class RobotContainer {
     private double turretTargetVel = 0.0;
 
     public RobotContainer() {
+
+        // start data logging
+        DataLogManager.start();
         // Configure pathfinding
         Pathfinding.setPathfinder(new LocalADStar());
         m_swerve.runAutoBuilder();
 
         // Configure autos
         // m_autochooser.setDefaultOption("square", Autos.simpleSquareAuto(m_swerve, m_turret));
-        m_autochooser.setDefaultOption("drive under tag 28", Autos.driveUnderTagAuto(m_swerve, 28));
+        m_autochooser.setDefaultOption("center auto", 
+            new SequentialCommandGroup(
+                runOnce(() -> turretTargetVel = 0.5),
+                AutoBuilder.buildAuto("Center Auto"),
+                waitSeconds(1),
+                runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder).withTimeout(4),
+                runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_feeder).withTimeout(2),
+                runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder).withTimeout(4),
+                runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_feeder).withTimeout(2),
+                runOnce(() -> turretTargetVel = 0)
+        ));
+        // m_autochooser.setDefaultOption("drive under tag 28", Autos.driveUnderTagAuto(m_swerve, 28));
         // m_autochooser.addOption("autoalign reef A", Autos.autoAlignReef(m_swerve, 18));
         SmartDashboard.putData(m_autochooser);
 
@@ -97,9 +115,11 @@ public class RobotContainer {
 
         // Feed belt and kicker
         m_joystick2.rightTrigger().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));
-        m_joystick2.start().onTrue(runOnce(() -> turretTargetVel = 0.1));
+        m_joystick2.start().onTrue(runOnce(() -> turretTargetVel = 0.5));
         m_joystick2.back().onTrue(runOnce(() -> turretTargetVel = 0));
-        new Trigger(() -> this.hasAimInput()).whileTrue(run(() -> turretTargetPos = this.getAimHeading()));
+        new Trigger(() -> this.hasAimInput()).whileTrue(runEnd(() -> turretTargetPos = this.getAimHeading(), () -> turretTargetPos = 0));
+
+        m_joystick.x().onTrue(runOnce(() -> m_swerve.resetGyro()));
 
         // turret
         // m_joystick.rightTrigger().whileTrue(runEnd(() -> m_turret.spinUpFlywheels(), () -> m_turret.stopAllShooter(), m_turret));

@@ -4,6 +4,7 @@ import static edu.wpi.first.wpilibj2.command.Commands.*;
 import static frc.robot.utils.Constants.PathfindingConstants.*;
 import static frc.robot.utils.Constants.SwerveDriveConstants.k_initpose;
 import static frc.robot.utils.Constants.VisionConstants.k_fieldlayout;
+import edu.wpi.first.math.util.Units;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -12,6 +13,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.turret.Turret;
 
 /**
@@ -92,5 +95,59 @@ public final class Autos {
         return new SequentialCommandGroup(
             swerve.pathfindToPose(k_bluereefA, true),
             swerve.pathfindToPose(k_redreefA, true));
+    }
+
+      public static Command blueRightPickupAuto(Swerve swerve, Hopper hopper, Intake intake) {
+        // Pose2d startPose = new Pose2d(3.5, 0.5, new Rotation2d(0));
+        Pose2d farPose = new Pose2d(8, 0.5, new Rotation2d(Units.degreesToRadians(90)));
+        Pose2d returnPose = new Pose2d(3.5, 0.5, new Rotation2d(Units.degreesToRadians(180)));
+        Pose2d centerPose = k_fieldCenter;
+
+        return sequence(
+            // 1. Run hopper slide command (extend)
+            hopper.slideCommand(),
+            // 2. Drive to (8, 0.5), turning 90° left
+            defer(() -> swerve.pathfindToPose(farPose, true, 0.0), java.util.Set.of(swerve)),
+            // 3. Run intake while driving to field center
+            new ParallelDeadlineGroup(
+                defer(() -> swerve.pathfindToPose(
+                    new Pose2d(centerPose.getX(), centerPose.getY(), swerve.getPose().getRotation()),
+                    true, 0.0
+                ), java.util.Set.of(swerve)),
+                runEnd(intake::runIntake, intake::stopRoller, intake)
+            ),
+            // 4. Drive back to (8, 0.5) rotated 90° left
+            defer(() -> swerve.pathfindToPose(new Pose2d(8, 0.5, new Rotation2d(Units.degreesToRadians(180))), true, 1.0), java.util.Set.of(swerve)),
+            // 5. Return to start facing 180° (opposite of starting heading)
+            defer(() -> swerve.pathfindToPose(returnPose, true, 0.0), java.util.Set.of(swerve))
+        );
+    }
+
+    /**
+     * Red side auto: mirror of bluePickupAuto across field center (x mirrored around 8.1).
+     */
+    public static Command redRightPickupAuto(Swerve swerve, Hopper hopper, Intake intake) {
+        Pose2d farPose = new Pose2d(8.2, 7.5, new Rotation2d(Units.degreesToRadians(-90)));
+        Pose2d returnPose = new Pose2d(12.7, 7.5, new Rotation2d(0));
+        Pose2d centerPose = k_fieldCenter;
+
+        return sequence(
+            // 1. Run hopper slide command (extend)
+            hopper.slideCommand(),
+            // 2. Drive to (8.2, 0.5), turning 90° left
+            defer(() -> swerve.pathfindToPose(farPose, true, 0.0), java.util.Set.of(swerve)),
+            // 3. Run intake while driving to field center
+            new ParallelDeadlineGroup(
+                defer(() -> swerve.pathfindToPose(
+                    new Pose2d(centerPose.getX(), centerPose.getY(), swerve.getPose().getRotation()),
+                    true, 0.0
+                ), java.util.Set.of(swerve)),
+                runEnd(intake::runIntake, intake::stopRoller, intake)
+            ),
+            // 4. Drive back to (8.2, 0.5) facing back toward red side
+            defer(() -> swerve.pathfindToPose(new Pose2d(8.2, 7.5, new Rotation2d(0)), true, 1.0), java.util.Set.of(swerve)),
+            // 5. Return to start facing 0° (opposite of starting 180° heading)
+            defer(() -> swerve.pathfindToPose(returnPose, true, 0.0), java.util.Set.of(swerve))
+        );
     }
 }

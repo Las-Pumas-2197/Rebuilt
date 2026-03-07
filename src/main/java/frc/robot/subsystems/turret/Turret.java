@@ -60,7 +60,7 @@ public class Turret extends SubsystemBase {
   private static final double TURRET_GEAR_RATIO = 10.0;
 
   // PID constants for rotation
-  private static final double ROTATION_KP = 3;
+  private static final double ROTATION_KP = 2;
   private static final double ROTATION_KI = 0.0;
   private static final double ROTATION_KD = 0.1;
   private static final double ROTATION_KS = 0.2;

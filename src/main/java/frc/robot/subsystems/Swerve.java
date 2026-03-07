@@ -100,6 +100,10 @@ public class Swerve extends SubsystemBase {
     );
   }
 
+  public void resetGyro() {
+    m_swervedrive.zeroGyro();
+  }
+
   /** Returns the current swerve drive instance. */
   public Field2d getField2d() {
     return m_swervedrive.field;
