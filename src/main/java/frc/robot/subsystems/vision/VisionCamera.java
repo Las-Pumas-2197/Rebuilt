@@ -179,7 +179,7 @@ public class VisionCamera extends SubsystemBase {
     // compose estimate
     results.ifPresentOrElse(result -> {
       m_estimator.update(result).ifPresent(est -> {
-        estimate = Pair.of(Optional.of(est), calculateStdDevs(est, result));
+        estimate = Pair.of(Optional.of(est), k_multitagstddevs);
       });
     }, () -> estimate = Pair.of(Optional.empty(), k_ignorestddevs)); // empty estimate and set stddevs to
                                                                      // ignore

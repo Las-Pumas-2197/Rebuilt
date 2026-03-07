@@ -99,7 +99,7 @@ public class RobotContainer {
         m_joystick2.rightTrigger().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));
         m_joystick2.start().onTrue(runOnce(() -> turretTargetVel = 0.1));
         m_joystick2.back().onTrue(runOnce(() -> turretTargetVel = 0));
-        new Trigger(() -> this.hasAimInput()).whileTrue(runEnd(() -> turretTargetPos = this.getAimHeading(), () -> turretTargetPos = 0));
+        new Trigger(() -> this.hasAimInput()).whileTrue(run(() -> turretTargetPos = this.getAimHeading()));
 
         // turret
         // m_joystick.rightTrigger().whileTrue(runEnd(() -> m_turret.spinUpFlywheels(), () -> m_turret.stopAllShooter(), m_turret));
