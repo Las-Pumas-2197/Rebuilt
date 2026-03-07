@@ -11,7 +11,6 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -111,6 +110,7 @@ public class Turret extends SubsystemBase {
     rotationConfig.idleMode(IdleMode.kBrake);
     rotationConfig.smartCurrentLimit(ROTATION_CURRENT_LIMIT);
     rotationConfig.inverted(true);
+    
     // Convert encoder position to turret radians directly
     rotationConfig.encoder.positionConversionFactor((2 * Math.PI) / TURRET_GEAR_RATIO);
     m_rotationMotor.configure(rotationConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);

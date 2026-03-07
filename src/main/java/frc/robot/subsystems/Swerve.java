@@ -122,6 +122,18 @@ public class Swerve extends SubsystemBase {
     return m_swervedrive.getPose();
   }
 
+    /**
+   * Returns the sim factory pose. Use only in simulation to update the vision sim
+   * factory.
+   */
+  public Pose2d getSimPose() {
+    if (m_swervedrive.getSimulationDriveTrainPose().isPresent()) {
+      return m_swervedrive.getSimulationDriveTrainPose().get();
+    } else {
+      return new Pose2d();
+    }
+  }
+
   public Rotation2d getGyroHeading() {
     return m_swervedrive.getYaw();
   }
