@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -66,9 +67,6 @@ public class RobotContainer {
         Pathfinding.setPathfinder(new LocalADStar());
         m_swerve.runAutoBuilder();
 
-        // Alliance selector for turret target
-        m_allianceChooser.setDefaultOption("Blue", k_basinCenter);
-        m_allianceChooser.addOption("Red", k_redBasinCenter);
         SmartDashboard.putData("Alliance", m_allianceChooser);
 
         // Configure autos
@@ -105,7 +103,7 @@ public class RobotContainer {
         m_joystick2.rightTrigger().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));
         m_joystick2.start().onTrue(runOnce(() -> turretTargetVel = 0.1));
         m_joystick2.back().onTrue(runOnce(() -> turretTargetVel = 0));
-        m_joystick2.axisGreaterThan(0, 0.2).whileTrue(run(() -> turretTargetPos = Math.atan2(-m_joystick2.getLeftX(), m_joystick2.getLeftY())));
+        new Trigger(() -> this.hasAimInput()).whileTrue(run(() -> turretTargetPos = this.getAimHeading()));
 
 
         // turret
@@ -122,6 +120,15 @@ public class RobotContainer {
         // m_joystick.rightBumper().onTrue(runOnce(() -> turretTargetPos = 0));
 
         // new Trigger(() -> RobotState.isEnabled()).whileTrue(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
+    }
+    
+    private boolean hasAimInput() {
+        return Math.abs(m_joystick2.getLeftY()) > 0.2
+            || Math.abs(m_joystick2.getLeftX()) > 0.2;
+    }
+
+    private double getAimHeading() {
+        return Math.atan2(-m_joystick2.getLeftX(), -m_joystick2.getLeftY());
     }
 
     private boolean hasManualDriveInput() {
@@ -179,7 +186,12 @@ public class RobotContainer {
 
     /** Returns the turret target pose based on the alliance chooser. */
     public Pose2d getTargetPose() {
-        return m_allianceChooser.getSelected();
+        var alliance = DriverStation.getAlliance();
+        if (alliance.isPresent()) {
+            return alliance.get() == DriverStation.Alliance.Red ? k_redBasinCenter : k_basinCenter;
+        } else { 
+            return k_basinCenter;
+        }
     }
 
     public void testRun() {}
