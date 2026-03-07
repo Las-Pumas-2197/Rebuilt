@@ -119,6 +119,8 @@ public class RobotContainer {
         m_joystick2.back().onTrue(runOnce(() -> turretTargetVel = 0));
         new Trigger(() -> this.hasAimInput()).whileTrue(runEnd(() -> turretTargetPos = this.getAimHeading(), () -> turretTargetPos = 0));
 
+        m_joystick2.leftTrigger().whileTrue(turretTrackHubCommand());
+
         m_joystick.x().onTrue(runOnce(() -> m_swerve.resetGyro()));
 
         // turret
@@ -177,6 +179,15 @@ public class RobotContainer {
                 turretTargetVel,
                 turretTargetPos
         ), m_turret);
+    }
+
+    private Command turretTrackHubCommand() {
+        return new RunCommand(() -> {
+            Pose2d robotPose = m_swerve.getPose();
+            Pose2d targetPose = getTargetPose();
+            double angleToHub = m_turret.calculateAngleToFieldPose(robotPose, targetPose);
+            m_turret.turretCL(0.5, angleToHub);
+        }, m_turret);
     }
 
     public Command getAutonomousCommand() {
