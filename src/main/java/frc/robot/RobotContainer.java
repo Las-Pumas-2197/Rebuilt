@@ -87,8 +87,6 @@ public class RobotContainer {
 
     private void configureBindings() {
         m_joystick.back().onTrue(runOnce(() -> m_swerve.getCurrentCommand().cancel()));
-        // m_joystick.start().whileTrue(run(() -> BlackBox.DataRecorder.recordData("heading", m_swerve.getGyroHeading())));
-        // m_joystick.a().onTrue(CycleCommands.createCycleCommand(m_swerve, m_turret, this::hasManualDriveInput));
 
         // hopper slide bindings (slide motor now in Hopper)
         m_joystick.povUp().whileTrue(runEnd(() -> m_hopper.extendSlide(), () -> m_hopper.stopSlide(), m_hopper));
@@ -96,11 +94,9 @@ public class RobotContainer {
 
         // intake roller
         m_joystick.a().toggleOnTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
-        // hopper conveyor — currently removed
-        // m_joystick.y().whileTrue(runEnd(() -> m_hopper.runConveyor(), () -> m_hopper.stopConveyor(), m_hopper));
 
         // Zero slide encoder (for measuring travel distance)
-        m_joystick.y().onTrue(runOnce(() -> m_hopper.zeroSlideEncoder(), m_hopper));
+        // m_joystick.y().onTrue(runOnce(() -> m_hopper.zeroSlideEncoder(), m_hopper));
         
         // Toggle slide extend/retract by position
         m_joystick.b().onTrue(m_hopper.slideCommand());
@@ -135,12 +131,12 @@ public class RobotContainer {
             || Math.abs(m_joystick.getRightX()) > deadband;
     }
 
-    // private ParallelCommandGroup visionDefaultCommand() {
-    //     ParallelCommandGroup cmd = new ParallelCommandGroup();
-    //     cmd.addCommands(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
-    //     cmd.addRequirements(m_vision);
-    //     return cmd;
-    // }
+    private ParallelCommandGroup visionDefaultCommand() {
+        ParallelCommandGroup cmd = new ParallelCommandGroup();
+        cmd.addCommands(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
+        cmd.addRequirements(m_vision);
+        return cmd;
+    }
 
     private ParallelCommandGroup swerveDefaultCommand() {
         return new ParallelCommandGroup (
@@ -148,8 +144,8 @@ public class RobotContainer {
                 -MathUtil.applyDeadband(m_joystick.getLeftY(), 0.2) * k_maxlinspeedteleop,
                 -MathUtil.applyDeadband(m_joystick.getLeftX(), 0.2) * k_maxlinspeedteleop,
                 -MathUtil.applyDeadband(m_joystick.getRightX(), 0.2) * k_maxrotspeedteleop)),
-            m_swerve),
-            run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates()))
+            m_swerve)
+            // run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates()))
             );
     }
 
@@ -159,6 +155,18 @@ public class RobotContainer {
                 turretTargetVel,
                 turretTargetPos
         ), m_turret);
+    }
+
+    /** Tracks the hub pose from the alliance chooser with distance-based flywheel speed. Hold to use. */
+    private Command turretTrackHubCommand() {
+        return new RunCommand(() -> {
+            Pose2d robotPose = m_swerve.getPose();
+            Pose2d targetPose = getTargetPose();
+            double angleToHub = m_turret.calculateAngleToFieldPose(robotPose, targetPose);
+            double distance = robotPose.getTranslation().getDistance(targetPose.getTranslation());
+            double flywheelSpeed = m_turret.interpolateFlywheelSpeed(distance);
+            m_turret.turretCL(flywheelSpeed, angleToHub);
+        }, m_turret);
     }
 
 

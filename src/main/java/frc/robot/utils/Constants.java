@@ -183,9 +183,9 @@ public final class Constants {
     public static final AprilTagFieldLayout k_fieldlayout = AprilTagFieldLayout
         .loadField(AprilTagFields.k2026RebuiltAndymark);
 
-    // Standard deviations for pose estimation
-    public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(0.015, 0.015, 0.015);
-    public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.00, 0.00, 0.00);
+    // Standard deviations for pose estimation (official PhotonVision heuristic)
+    public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(4, 4, 8);
+    public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.5, 0.5, 1);
     public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(
         Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
 
@@ -215,9 +215,9 @@ public final class Constants {
   public static final class PathfindingConstants {
     public static final Pose2d k_bluereefA = new Pose2d(1, 4, new Rotation2d(Units.degreesToRadians(0)));
     public static final Pose2d k_redreefA = new Pose2d(16, 4, new Rotation2d(Units.degreesToRadians(0)));
-    public static final Pose2d k_fieldCenter = new Pose2d(8.27, 4.0, new Rotation2d(0));
+    public static final Pose2d k_fieldCenter = new Pose2d(8, 4.0, new Rotation2d(0));
     public static final Pose2d k_basinCenter = new Pose2d(4.5, 4.0, new Rotation2d(0));
-    public static final Pose2d k_redBasinCenter = new Pose2d(16.54 - 4.5, 4.0, new Rotation2d(0));
+    public static final Pose2d k_redBasinCenter = new Pose2d(11.5, 4.0, new Rotation2d(0));
 
     // Simple square auto waypoints
     public static final Pose2d k_squarePoint1 = new Pose2d(1.5, 1, new Rotation2d(0));

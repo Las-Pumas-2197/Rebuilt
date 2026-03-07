@@ -128,12 +128,33 @@ public class Swerve extends SubsystemBase {
 
   /** Adds the current queue of vision measurements to the pose estimator. */
   public void addVisionMeasurements(List<Pair<Optional<EstimatedRobotPose>, Matrix<N3, N1>>> estimates) {
+    SmartDashboard.putNumber("Swerve/VisionEstimatesReceived", estimates.size());
+    int fed = 0;
     for (var estimate : estimates) {
       estimate.getFirst().ifPresent(est -> {
-        m_swervedrive.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, estimate.getSecond());
-        SmartDashboard.putNumber("data", est.targetsUsed.size());
+        Pose2d visionPose = est.estimatedPose.toPose2d();
+        Matrix<N3, N1> stddevs = estimate.getSecond();
+
+        m_swervedrive.addVisionMeasurement(visionPose, est.timestampSeconds, stddevs);
+
+        // Debug: what we just fed to the pose estimator
+        SmartDashboard.putNumber("Swerve/VisionFedX", visionPose.getX());
+        SmartDashboard.putNumber("Swerve/VisionFedY", visionPose.getY());
+        SmartDashboard.putNumber("Swerve/VisionFedDeg", visionPose.getRotation().getDegrees());
+        SmartDashboard.putNumber("Swerve/VisionFedTimestamp", est.timestampSeconds);
+        SmartDashboard.putNumber("Swerve/VisionStdDevX", stddevs.get(0, 0));
+        SmartDashboard.putNumber("Swerve/VisionStdDevY", stddevs.get(1, 0));
+        SmartDashboard.putNumber("Swerve/VisionStdDevTheta", stddevs.get(2, 0));
       });
+      if (estimate.getFirst().isPresent()) fed++;
     }
+    SmartDashboard.putNumber("Swerve/VisionMeasurementsFed", fed);
+
+    // Current odometry pose for comparison
+    Pose2d odomPose = m_swervedrive.getPose();
+    SmartDashboard.putNumber("Swerve/OdomX", odomPose.getX());
+    SmartDashboard.putNumber("Swerve/OdomY", odomPose.getY());
+    SmartDashboard.putNumber("Swerve/OdomDeg", odomPose.getRotation().getDegrees());
   }
 
   /** Pathfinds to a specifed pose.

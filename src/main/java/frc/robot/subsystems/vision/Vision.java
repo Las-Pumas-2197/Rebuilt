@@ -26,19 +26,14 @@ import java.util.function.DoubleSupplier;
 
 public class Vision extends SubsystemBase {
 
-  /** PhotonVision cameras for pose estimation. */
   private final List<VisionCamera> m_cameras = new ArrayList<>();
-  /** Limelight camera for pose estimation. */
-  private final LimelightCamera m_limelight;
+  // private final LimelightCamera m_limelight;
 
-  /**
-   * @param yawDegreesSupplier Supplier for the robot's gyro yaw in degrees (used by Limelight MegaTag2).
-   */
   public Vision(DoubleSupplier yawDegreesSupplier) {
     for (int num = 0; num < k_cameranames.size(); num++) {
       m_cameras.add(new VisionCamera(k_cameranames.get(num), k_cameraintrinsics.get(num)));
     }
-    m_limelight = new LimelightCamera(k_limelightname, yawDegreesSupplier);
+    // m_limelight = new LimelightCamera(k_limelightname, yawDegreesSupplier);
   }
 
   /** Get a list of all of the estimates from all camera pipelines (PhotonVision + Limelight). */
@@ -77,12 +72,7 @@ public class Vision extends SubsystemBase {
     return fiducials.stream().toList();
   }
 
-  /** Gets the yaw of a specific target seen by a specific camera index.
-   *
-   * @param fiducialID The ID of the fiducial whose yaw is requested.
-   * @param cameraID The index of the camera to check for the fiducial.
-   * @return The yaw as a Rotation2d. Returns an empty Rotation2d if fiducial is not visible.
-  */
+
   public Rotation2d getCameraTargetYaw(int fiducialID, int cameraID) {
     Optional<PhotonPipelineResult> result = m_cameras.get(cameraID).getResults();
     Rotation2d target_yaw = new Rotation2d();
@@ -96,12 +86,6 @@ public class Vision extends SubsystemBase {
     return target_yaw;
   }
 
-  /** Returns the linear distance to the target. Target must be visible or it will return a distance of zero.
-   *
-   * @param fiducialID The ID of the fiducial.
-   * @param cameraID The ID of the camera where the fiducial is visible.
-   * @return
-   */
   public double getCameraTargetDistance(int fiducialID, int cameraID) {
     Optional<PhotonPipelineResult> result = m_cameras.get(cameraID).getResults();
     double target_distance = 0;
@@ -124,7 +108,15 @@ public class Vision extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putBoolean("RR camera has results", m_cameras.get(3).getResults().isPresent());
-    SmartDashboard.putBoolean("RR camera has estimate", m_cameras.get(3).getEstimate().getFirst().isPresent());
+    // Per-camera summary
+    for (int i = 0; i < m_cameras.size(); i++) {
+      var cam = m_cameras.get(i);
+      SmartDashboard.putBoolean("Vision/cam" + i + "/HasResults", cam.getResults().isPresent());
+      SmartDashboard.putBoolean("Vision/cam" + i + "/HasEstimate", cam.getEstimate().getFirst().isPresent());
+    }
+
+    // How many estimates will reach addVisionMeasurements
+    var estimates = getEstimates();
+    SmartDashboard.putNumber("Vision/EstimatesPassedToSwerve", estimates.size());
   }
 }
