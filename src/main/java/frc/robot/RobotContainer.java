@@ -185,7 +185,7 @@ public class RobotContainer {
         return new RunCommand(() -> {
             Pose2d robotPose = m_swerve.getPose();
             Pose2d targetPose = getTargetPose();
-            double angleToHub = m_turret.calculateAngleToFieldPose(robotPose, targetPose) + Math.PI;
+            double angleToHub = MathUtil.angleModulus(m_turret.calculateAngleToFieldPose(robotPose, targetPose) + Math.PI);
             m_turret.turretCL(0.5, angleToHub);
         }, m_turret);
     }
