@@ -80,7 +80,7 @@ public class RobotContainer {
         // Default commands
         m_swerve.setDefaultCommand(swerveDefaultCommand());
         m_turret.setDefaultCommand(turretDefaultCommand());
-        // m_vision.setDefaultCommand(visionDefaultCommand());
+        m_vision.setDefaultCommand(visionDefaultCommand());
 
         configureBindings();
     }
@@ -95,9 +95,6 @@ public class RobotContainer {
         // intake roller
         m_joystick.a().toggleOnTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
 
-        // Zero slide encoder (for measuring travel distance)
-        // m_joystick.y().onTrue(runOnce(() -> m_hopper.zeroSlideEncoder(), m_hopper));
-        
         // Toggle slide extend/retract by position
         m_joystick.b().onTrue(m_hopper.slideCommand());
 
@@ -157,7 +154,7 @@ public class RobotContainer {
         ), m_turret);
     }
 
-    /** Tracks the hub pose from the alliance chooser with distance-based flywheel speed. Hold to use. */
+    // Tracks the hub pose from the alliance chooser with distance-based flywheel speed
     private Command turretTrackHubCommand() {
         return new RunCommand(() -> {
             Pose2d robotPose = m_swerve.getPose();
