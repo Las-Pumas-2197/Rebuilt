@@ -5,14 +5,17 @@
 package frc.robot.subsystems.vision;
 
 import org.photonvision.EstimatedRobotPose;
+import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Pair;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -27,13 +30,20 @@ import java.util.function.DoubleSupplier;
 public class Vision extends SubsystemBase {
 
   private final List<VisionCamera> m_cameras = new ArrayList<>();
-  // private final LimelightCamera m_limelight;
+  private VisionSystemSim m_visionsim;
 
   public Vision(DoubleSupplier yawDegreesSupplier) {
     for (int num = 0; num < k_cameranames.size(); num++) {
       m_cameras.add(new VisionCamera(k_cameranames.get(num), k_cameraintrinsics.get(num)));
     }
-    // m_limelight = new LimelightCamera(k_limelightname, yawDegreesSupplier);
+
+    if (RobotBase.isSimulation()) {
+      m_visionsim = new VisionSystemSim("main");
+      for (int num = 0; num < m_cameras.size(); num++) {
+        m_visionsim.addCamera(m_cameras.get(num).getSimInstance(), k_cameraintrinsics.get(num));
+      }
+      m_visionsim.addAprilTags(k_fieldlayout);
+    }
   }
 
   /** Get a list of all of the estimates from all camera pipelines (PhotonVision + Limelight). */
@@ -104,6 +114,15 @@ public class Vision extends SubsystemBase {
   /** Returns a list of the vision system camera instances. */
   public List<VisionCamera> getCameras() {
     return m_cameras;
+  }
+
+  /** Updates the vision sim with the current robot pose.
+   * @param pose The simulation's physical pose of the robot.
+   */
+  public void updatePose(Pose2d pose) {
+    if (m_visionsim != null) {
+      m_visionsim.update(pose);
+    }
   }
 
   @Override

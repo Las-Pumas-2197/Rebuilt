@@ -73,8 +73,11 @@ public class RobotContainer {
 
         // Configure autos
         // m_autochooser.setDefaultOption("square", Autos.simpleSquareAuto(m_swerve, m_turret));
-        m_autochooser.setDefaultOption("drive under tag 28", Autos.driveUnderTagAuto(m_swerve, 28));
-        m_autochooser.addOption("autoalign reef A", Autos.autoAlignReef(m_swerve, 18));
+        // m_autochooser.setDefaultOption("drive under tag 28", Autos.driveUnderTagAuto(m_swerve, 28));
+        // m_autochooser.addOption("autoalign reef A", Autos.autoAlignReef(m_swerve, 18));
+        m_autochooser.setDefaultOption("red pickup", Autos.redPickupAuto(m_swerve, m_hopper, m_intake));
+        m_autochooser.addOption("blue pickup", Autos.bluePickupAuto(m_swerve, m_hopper, m_intake));
+        
         SmartDashboard.putData(m_autochooser);
 
         // Default commands
@@ -130,6 +133,8 @@ public class RobotContainer {
 
     private ParallelCommandGroup visionDefaultCommand() {
         ParallelCommandGroup cmd = new ParallelCommandGroup();
+        if (RobotBase.isSimulation())
+            cmd.addCommands(run(() -> m_vision.updatePose(m_swerve.getSimPose())));
         cmd.addCommands(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
         cmd.addRequirements(m_vision);
         return cmd;

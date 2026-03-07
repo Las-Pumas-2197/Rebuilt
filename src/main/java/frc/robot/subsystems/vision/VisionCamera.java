@@ -16,6 +16,8 @@ import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.simulation.PhotonCameraSim;
+import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
@@ -26,6 +28,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -35,6 +38,7 @@ public class VisionCamera extends SubsystemBase {
   private final PhotonPoseEstimator m_estimator;
   private final String m_name;
   private final Transform3d m_robotToCamera;
+  private PhotonCameraSim m_camerasim;
 
   private Optional<PhotonPipelineResult> results = Optional.empty();
   private Pair<Optional<EstimatedRobotPose>, Matrix<N3, N1>> estimate = Pair.of(Optional.empty(), k_ignorestddevs);
@@ -45,6 +49,14 @@ public class VisionCamera extends SubsystemBase {
     m_estimator = new PhotonPoseEstimator(k_fieldlayout, robotToCamera);
     m_name = name;
     m_robotToCamera = robotToCamera;
+
+    if (RobotBase.isSimulation()) {
+      SimCameraProperties camerasim_properties = new SimCameraProperties();
+      camerasim_properties.setFPS(10);
+      m_camerasim = new PhotonCameraSim(m_camera, camerasim_properties);
+      m_camerasim.enableRawStream(true);
+      m_camerasim.enableDrawWireframe(true);
+    }
   }
 
   // returns a list of the current visible fiducials.
@@ -136,9 +148,14 @@ public class VisionCamera extends SubsystemBase {
     return estimate;
   }
 
-  // Returns a boolean with the connection status of the camera. 
+  // Returns a boolean with the connection status of the camera.
   public boolean isConnected() {
     return m_camera.isConnected();
+  }
+
+  // Returns the camera sim instance to interface with.
+  public PhotonCameraSim getSimInstance() {
+    return m_camerasim;
   }
 
   @Override
@@ -173,7 +190,7 @@ public class VisionCamera extends SubsystemBase {
         // estimate = Pair.of(Optional.of(pose), calculateStdDevs(pose, result));
         estimate = Pair.of(Optional.of(pose), k_multitagstddevs);
 
-        // Debug: log the estimated robot pose
+        // debug
         Pose2d robotPose2d = pose.estimatedPose.toPose2d();
         SmartDashboard.putNumber(p + "EstX", robotPose2d.getX());
         SmartDashboard.putNumber(p + "EstY", robotPose2d.getY());

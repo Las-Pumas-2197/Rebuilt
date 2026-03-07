@@ -215,9 +215,9 @@ public final class Constants {
   public static final class PathfindingConstants {
     public static final Pose2d k_bluereefA = new Pose2d(1, 4, new Rotation2d(Units.degreesToRadians(0)));
     public static final Pose2d k_redreefA = new Pose2d(16, 4, new Rotation2d(Units.degreesToRadians(0)));
-    public static final Pose2d k_fieldCenter = new Pose2d(8, 4.0, new Rotation2d(0));
+    public static final Pose2d k_fieldCenter = new Pose2d(8.1, 3.85, new Rotation2d(0));
     public static final Pose2d k_basinCenter = new Pose2d(4.5, 4.0, new Rotation2d(0));
-    public static final Pose2d k_redBasinCenter = new Pose2d(11.5, 4.0, new Rotation2d(0));
+    public static final Pose2d k_redBasinCenter = new Pose2d(11.7, 4.0, new Rotation2d(0));
 
     // Simple square auto waypoints
     public static final Pose2d k_squarePoint1 = new Pose2d(1.5, 1, new Rotation2d(0));
