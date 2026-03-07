@@ -78,10 +78,10 @@ public class RobotContainer {
                 runOnce(() -> turretTargetVel = 0.5),
                 AutoBuilder.buildAuto("Center Auto"),
                 waitSeconds(1),
-                runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder).withTimeout(4),
-                runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_feeder).withTimeout(2),
-                runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder).withTimeout(4),
-                runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_feeder).withTimeout(2),
+                new ParallelCommandGroup(
+                    runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder),
+                    runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake)
+                ).withTimeout(10),
                 runOnce(() -> turretTargetVel = 0)
         ));
         // m_autochooser.setDefaultOption("drive under tag 28", Autos.driveUnderTagAuto(m_swerve, 28));

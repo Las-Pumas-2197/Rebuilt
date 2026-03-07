@@ -81,70 +81,36 @@ public class VisionCamera extends SubsystemBase {
    * @return The calculated standard deviations.
    */
   private Matrix<N3, N1> calculateStdDevs(EstimatedRobotPose estimate, PhotonPipelineResult result) {
-    int numTags = result.targets.size();
-
-    if (numTags == 0) {
-      return k_ignorestddevs;
-    }
-
-    // Calculate metrics across all visible tags
+    var targets = estimate.targetsUsed;
+    int numTags = 0;
     double avgDist = 0.0;
-    double avgAmbiguity = 0.0;
-    double totalArea = 0.0;
-    int validTags = 0;
 
-    for (var target : result.targets) {
+    for (var target : targets) {
       Optional<Pose3d> tagPose = m_estimator.getFieldTags().getTagPose(target.fiducialId);
       if (tagPose.isEmpty()) continue;
 
       avgDist += tagPose.get().toPose2d().getTranslation()
           .getDistance(estimate.estimatedPose.toPose2d().getTranslation());
-      avgAmbiguity += target.getPoseAmbiguity();
-      totalArea += target.getArea();
-      validTags++;
+      numTags++;
     }
 
-    if (validTags == 0) {
+    if (numTags == 0) {
       return k_ignorestddevs;
     }
 
-    avgDist /= validTags;
-    avgAmbiguity /= validTags;
-    double avgArea = totalArea / validTags;
+    avgDist /= numTags;
 
-    // Reject high-ambiguity single-tag estimates entirely
-    if (numTags == 1 && avgAmbiguity > 0.2) {
+    Matrix<N3, N1> stddevs = k_singletagstddevs;
+    if (numTags > 1) {
+      stddevs = k_multitagstddevs;
+    }
+
+    // Reject single-tag estimates beyond 6 meters
+    if (numTags == 1 && avgDist > 6) {
       return k_ignorestddevs;
     }
 
-    // Reject any estimate with very high ambiguity
-    if (avgAmbiguity > 0.5) {
-      return k_ignorestddevs;
-    }
-
-    // Base stddevs based on tag count
-    Matrix<N3, N1> stddevs = (numTags > 1) ? k_multitagstddevs : k_singletagstddevs;
-
-    // Distance factor: exponential growth beyond 2m baseline
-    // At 2m: 1.0, at 4m: 4.0, at 6m: 9.0
-    double distanceFactor = Math.max(1.0, Math.pow(avgDist / 2.0, 2));
-
-    // Tag count factor: more tags = more confidence (sqrt scaling)
-    double tagCountFactor = 1.0 / Math.sqrt(numTags);
-
-    // Ambiguity factor: penalize uncertain estimates
-    double ambiguityFactor = 1.0 + (avgAmbiguity * 10.0);
-
-    // Area factor: larger tags in frame = more confidence
-    // Area is percentage of image (0-100), typical values 0.5-5%
-    // Clamp to reasonable range and invert (smaller area = higher uncertainty)
-    double clampedArea = Math.max(0.1, Math.min(avgArea, 10.0));
-    double areaFactor = 2.0 / clampedArea;
-
-    // Combine all factors
-    double scaleFactor = distanceFactor * tagCountFactor * ambiguityFactor * areaFactor;
-
-    return stddevs.times(scaleFactor);
+    return stddevs.times(1 + (avgDist * avgDist / 30));
   }
 
   /** Returns the most recent pipeline result. */
@@ -180,7 +146,7 @@ public class VisionCamera extends SubsystemBase {
     // compose estimate
     results.ifPresentOrElse(result -> {
       m_estimator.update(result).ifPresent(est -> {
-        estimate = Pair.of(Optional.of(est), k_multitagstddevs);
+        estimate = Pair.of(Optional.of(est), calculateStdDevs(est, result));
       });
     }, () -> estimate = Pair.of(Optional.empty(), k_ignorestddevs)); // empty estimate and set stddevs to
                                                                      // ignore
