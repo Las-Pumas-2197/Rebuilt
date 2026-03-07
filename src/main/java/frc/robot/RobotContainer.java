@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -121,6 +122,9 @@ public class RobotContainer {
 
         m_joystick2.leftTrigger().whileTrue(turretTrackHubCommand());
 
+        // Shake robot forward/backward
+        m_joystick.y().whileTrue(shakeCommand());
+
         m_joystick.x().onTrue(runOnce(() -> m_swerve.resetGyro()));
 
         // turret
@@ -179,6 +183,15 @@ public class RobotContainer {
                 turretTargetVel,
                 turretTargetPos
         ), m_turret);
+    }
+
+    private Command shakeCommand() {
+        final double shakeSpeed = 2.0; // m/s
+        final double shakeFrequency = 8.0; 
+        return new RunCommand(() -> {
+            double direction = Math.sin(Timer.getFPGATimestamp() * shakeFrequency * 2 * Math.PI) > 0 ? 1 : -1;
+            m_swerve.drive(new ChassisSpeeds(direction * shakeSpeed, 0, 0));
+        }, m_swerve);
     }
 
     private Command turretTrackHubCommand() {
