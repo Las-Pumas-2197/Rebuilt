@@ -13,8 +13,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -49,16 +51,12 @@ public class RobotContainer {
     private final Intake m_intake = new Intake();
     private final Turret m_turret = new Turret();
     private final Feeder m_feeder = new Feeder();
-
     private final Telemetry m_telemetry = new Telemetry(m_vision, m_swerve);
-
-    // Alliance chooser — determines turret tracking target
-    private final SendableChooser<Pose2d> m_allianceChooser = new SendableChooser<>();
 
     // Auto chooser
     private final SendableChooser<Command> m_autochooser = new SendableChooser<>();
 
-    private double turretTargetPos = 0.5*Math.PI;
+    private double turretTargetPos = 0.0;
     private double turretTargetVel = 0.0;
 
     public RobotContainer() {
@@ -66,22 +64,16 @@ public class RobotContainer {
         Pathfinding.setPathfinder(new LocalADStar());
         m_swerve.runAutoBuilder();
 
-        // Alliance selector for turret target
-        m_allianceChooser.setDefaultOption("Blue", k_basinCenter);
-        m_allianceChooser.addOption("Red", k_redBasinCenter);
-        SmartDashboard.putData("Alliance", m_allianceChooser);
-
         // Configure autos
         // m_autochooser.setDefaultOption("square", Autos.simpleSquareAuto(m_swerve, m_turret));
         m_autochooser.setDefaultOption("drive under tag 28", Autos.driveUnderTagAuto(m_swerve, 28));
-        m_autochooser.addOption("autoalign reef A", Autos.autoAlignReef(m_swerve, 18));
+        // m_autochooser.addOption("autoalign reef A", Autos.autoAlignReef(m_swerve, 18));
         SmartDashboard.putData(m_autochooser);
 
         // Default commands
         m_vision.setDefaultCommand(visionDefaultCommand());
         m_swerve.setDefaultCommand(swerveDefaultCommand());
         m_turret.setDefaultCommand(turretDefaultCommand());
-
 
         configureBindings();
     }
@@ -107,6 +99,7 @@ public class RobotContainer {
         m_joystick2.rightTrigger().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));
         m_joystick2.start().onTrue(runOnce(() -> turretTargetVel = 0.1));
         m_joystick2.back().onTrue(runOnce(() -> turretTargetVel = 0));
+        new Trigger(() -> this.hasAimInput()).whileTrue(runEnd(() -> turretTargetPos = this.getAimHeading(), () -> turretTargetPos = 0));
 
         // turret
         // m_joystick.rightTrigger().whileTrue(runEnd(() -> m_turret.spinUpFlywheels(), () -> m_turret.stopAllShooter(), m_turret));
@@ -124,11 +117,20 @@ public class RobotContainer {
         // new Trigger(() -> RobotState.isEnabled()).whileTrue(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
     }
 
-    private boolean hasManualDriveInput() {
-        final double deadband = 0.2;
-        return Math.abs(m_joystick.getLeftX()) > deadband
-            || Math.abs(m_joystick.getLeftY()) > deadband
-            || Math.abs(m_joystick.getRightX()) > deadband;
+    // private boolean hasManualDriveInput() {
+    //     final double deadband = 0.2;
+    //     return Math.abs(m_joystick.getLeftX()) > deadband
+    //         || Math.abs(m_joystick.getLeftY()) > deadband
+    //         || Math.abs(m_joystick.getRightX()) > deadband;
+    // }
+
+    private boolean hasAimInput() {
+        return Math.abs(m_joystick2.getLeftY()) > 0.2
+            || Math.abs(m_joystick2.getLeftX()) > 0.2;
+    }
+
+    private double getAimHeading() {
+        return Math.atan2(-m_joystick2.getLeftX(), -m_joystick2.getLeftY());
     }
 
     private ParallelCommandGroup visionDefaultCommand() {
@@ -143,8 +145,8 @@ public class RobotContainer {
     private Command swerveDefaultCommand() {
         return new
             RunCommand(() -> m_swerve.drive(new ChassisSpeeds(
-                -MathUtil.applyDeadband(m_joystick.getLeftY(), 0.2) * k_maxlinspeedteleop,
-                -MathUtil.applyDeadband(m_joystick.getLeftX(), 0.2) * k_maxlinspeedteleop,
+                -MathUtil.applyDeadband(m_joystick.getLeftY(), 0.2) * (m_joystick.rightBumper().getAsBoolean() ? k_maxlinspeedturbo : k_maxlinspeedteleop),
+                -MathUtil.applyDeadband(m_joystick.getLeftX(), 0.2) * (m_joystick.rightBumper().getAsBoolean() ? k_maxlinspeedturbo : k_maxlinspeedteleop),
                 -MathUtil.applyDeadband(m_joystick.getRightX(), 0.2) * k_maxrotspeedteleop)),
             m_swerve);
     }
@@ -161,10 +163,17 @@ public class RobotContainer {
         return m_autochooser.getSelected();
     }
 
-    /** Returns the turret target pose based on the alliance chooser. */
+    /** Returns the turret target pose based on the current alliance. */
     public Pose2d getTargetPose() {
-        return m_allianceChooser.getSelected();
+        var alliance = DriverStation.getAlliance();
+        if (alliance.isPresent()) {
+            return alliance.get() == DriverStation.Alliance.Red ? k_redBasinCenter : k_basinCenter;
+        } else { 
+            return k_basinCenter;
+        }
     }
 
-    public void testRun() {}
+    public void testRun() {
+        SmartDashboard.putNumber("turret heading", turretTargetPos);
+    }
 }

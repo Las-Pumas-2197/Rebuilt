@@ -85,7 +85,6 @@ public class Telemetry extends SubsystemBase {
             .toArray());
 
     // misc testing stuff
-    SmartDashboard.putBoolean("RR camera has results", m_photon.getCameras().get(0).hasResult());
     SmartDashboard.putBoolean("RR camera has estimate", m_photon.getCameras().get(0).getEstimate().getFirst().isPresent());
   }
 }

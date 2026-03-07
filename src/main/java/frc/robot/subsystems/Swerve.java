@@ -40,6 +40,8 @@ public class Swerve extends SubsystemBase {
   private final SwerveDrive m_swervedrive;
   private final RobotConfig m_PPconfig;
 
+  private int num_visionmeasurements = 0;
+
   public Swerve() {
 
     // attempt construction of YAGSL swerve object
@@ -143,7 +145,7 @@ public class Swerve extends SubsystemBase {
     for (var estimate : estimates) {
       estimate.getFirst().ifPresent(est -> {
         m_swervedrive.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, estimate.getSecond());
-        SmartDashboard.putNumber("data", est.targetsUsed.size());
+        num_visionmeasurements++;
       });
     }
   }
@@ -188,5 +190,6 @@ public class Swerve extends SubsystemBase {
   public void periodic() {
     m_swervedrive.updateOdometry();
     // m_swervedrive.field.setRobotPose(m_swervedrive.getPose());
+    SmartDashboard.putNumber("number of vision measurements added", num_visionmeasurements);
   }
 }
