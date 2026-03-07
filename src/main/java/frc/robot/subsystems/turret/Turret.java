@@ -305,8 +305,8 @@ public class Turret extends SubsystemBase {
     SmartDashboard.putNumber("turret vel", vel);
     m_rotationMotor.setVoltage(turretFFout + turretPIDout);
 
-    // m_flywheelLeft.setVoltage(vel * 12);
-    // m_flywheelRight.setVoltage(vel * 12);
+    m_flywheelLeft.setVoltage(vel * 12);
+    m_flywheelRight.setVoltage(vel * 12);
   }
 
   // ===== Combined Operations =====

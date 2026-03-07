@@ -107,6 +107,10 @@ public class RobotContainer {
 
         // Feed belt and kicker
         m_joystick2.rightTrigger().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));
+        m_joystick2.start().onTrue(runOnce(() -> turretTargetVel = 0.1));
+        m_joystick2.back().onTrue(runOnce(() -> turretTargetVel = 0));
+        m_joystick2.axisGreaterThan(0, 0.2).whileTrue(run(() -> turretTargetPos = Math.atan2(-m_joystick2.getLeftX(), m_joystick2.getLeftY())));
+
 
         // turret
         // m_joystick.rightTrigger().whileTrue(runEnd(() -> m_turret.spinUpFlywheels(), () -> m_turret.stopAllShooter(), m_turret));
