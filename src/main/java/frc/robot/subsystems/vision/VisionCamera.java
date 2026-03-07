@@ -105,8 +105,8 @@ public class VisionCamera extends SubsystemBase {
       stddevs = k_multitagstddevs;
     }
 
-    // Reject single-tag estimates beyond 6 meters
-    if (numTags == 1 && avgDist > 6) {
+    // Reject single-tag estimates beyond 5 meters
+    if (numTags == 1 && avgDist > 5) {
       return k_ignorestddevs;
     }
 

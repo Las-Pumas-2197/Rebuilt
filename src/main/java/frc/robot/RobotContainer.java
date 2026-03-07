@@ -75,7 +75,7 @@ public class RobotContainer {
         // m_autochooser.setDefaultOption("square", Autos.simpleSquareAuto(m_swerve, m_turret));
         m_autochooser.setDefaultOption("center auto", 
             new SequentialCommandGroup(
-                runOnce(() -> turretTargetVel = 0.5),
+                runOnce(() -> turretTargetVel = 0.45),
                 AutoBuilder.buildAuto("Center Auto"),
                 waitSeconds(1),
                 new ParallelCommandGroup(
@@ -101,8 +101,8 @@ public class RobotContainer {
         // m_joystick.a().onTrue(CycleCommands.createCycleCommand(m_swerve, m_turret, this::hasManualDriveInput));
 
         // hopper slide bindings (slide motor now in Hopper)
-        m_joystick.povUp().whileTrue(runEnd(() -> m_hopper.extendSlide(), () -> m_hopper.stopSlide(), m_hopper));
-        m_joystick.povDown().whileTrue(runEnd(() -> m_hopper.retractSlide(), () -> m_hopper.stopSlide(), m_hopper));
+        m_joystick.leftTrigger().whileTrue(runEnd(() -> m_hopper.extendSlide(), () -> m_hopper.stopSlide(), m_hopper));
+        m_joystick.rightTrigger().whileTrue(runEnd(() -> m_hopper.retractSlide(), () -> m_hopper.stopSlide(), m_hopper));
 
         // intake roller
         m_joystick.a().toggleOnTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
