@@ -17,6 +17,8 @@ import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import org.photonvision.simulation.PhotonCameraSim;
+import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 import edu.wpi.first.math.Matrix;
@@ -25,13 +27,14 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class VisionCamera extends SubsystemBase {
 
   private final PhotonCamera m_camera;
   private final PhotonPoseEstimator m_estimator;
+  private PhotonCameraSim m_camerasim;
 
   private Optional<PhotonPipelineResult> results = Optional.empty();
   private Pair<Optional<EstimatedRobotPose>, Matrix<N3, N1>> estimate = Pair.of(Optional.empty(), k_ignorestddevs);
@@ -42,6 +45,14 @@ public class VisionCamera extends SubsystemBase {
     m_estimator = new PhotonPoseEstimator(k_fieldlayout, intrinsics);
     m_estimator.setPrimaryStrategy(PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR);
     m_estimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+
+    if (RobotBase.isSimulation()) {
+      SimCameraProperties camerasim_properties = new SimCameraProperties();
+      camerasim_properties.setFPS(10);
+      m_camerasim = new PhotonCameraSim(m_camera, camerasim_properties);
+      m_camerasim.enableRawStream(true);
+      m_camerasim.enableDrawWireframe(true);
+    }
   }
 
   /**
@@ -139,6 +150,10 @@ public class VisionCamera extends SubsystemBase {
   /** Returns a boolean with the connection status of the camera. */
   public boolean isConnected() {
     return m_camera.isConnected();
+  }
+
+  public PhotonCameraSim getSimInstance() {
+    return m_camerasim;
   }
 
   @Override

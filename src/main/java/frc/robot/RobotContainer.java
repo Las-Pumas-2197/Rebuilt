@@ -80,7 +80,7 @@ public class RobotContainer {
         // Default commands
         m_swerve.setDefaultCommand(swerveDefaultCommand());
         m_turret.setDefaultCommand(turretDefaultCommand());
-        // m_vision.setDefaultCommand(visionDefaultCommand());
+        m_vision.setDefaultCommand(visionDefaultCommand());
 
         configureBindings();
     }
@@ -135,12 +135,14 @@ public class RobotContainer {
             || Math.abs(m_joystick.getRightX()) > deadband;
     }
 
-    // private ParallelCommandGroup visionDefaultCommand() {
-    //     ParallelCommandGroup cmd = new ParallelCommandGroup();
-    //     cmd.addCommands(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
-    //     cmd.addRequirements(m_vision);
-    //     return cmd;
-    // }
+    private ParallelCommandGroup visionDefaultCommand() {
+        ParallelCommandGroup cmd = new ParallelCommandGroup();
+        if (RobotBase.isSimulation())
+            cmd.addCommands(run(() -> m_vision.updateSimPose(m_swerve.getSimPose())));
+        cmd.addCommands(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
+        cmd.addRequirements(m_vision);
+        return cmd;
+    }
 
     private ParallelCommandGroup swerveDefaultCommand() {
         return new ParallelCommandGroup (

@@ -172,6 +172,14 @@ public class Swerve extends SubsystemBase {
     }
   }
 
+  public Pose2d getSimPose() {
+    if (m_swervedrive.getSimulationDriveTrainPose().isPresent()) {
+      return m_swervedrive.getSimulationDriveTrainPose().get();
+    } else {
+      return new Pose2d();
+    }
+  }
+
   @Override
   public void periodic() {
     m_swervedrive.updateOdometry();
