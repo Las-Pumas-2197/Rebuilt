@@ -38,7 +38,7 @@ public final class Autos {
             AutoBuilder.buildAuto("Center Auto"),
             AutoBuilder.buildAuto("Center Auto 2"),
             waitSeconds(1),
-            hopper.slideCommand().withTimeout(3),
+            hopper.slideCommand().withTimeout(2),
             waitSeconds(1),
             new ParallelCommandGroup(
                 runEnd(() -> swerve.drive(new ChassisSpeeds(0.2, 0, 0)),
@@ -58,7 +58,7 @@ public final class Autos {
             runOnce(setFlywheelVel),
             AutoBuilder.buildAuto("Alt Center Auto"),
             waitSeconds(1),
-            hopper.slideCommand().withTimeout(3),
+            hopper.slideCommand().withTimeout(2),
             waitSeconds(1),
             new ParallelCommandGroup(
                 runEnd(() -> swerve.drive(new ChassisSpeeds(0.2, 0, 0)),

@@ -38,8 +38,8 @@ public class Hopper extends SubsystemBase {
 
   private static final double SLIDE_GEAR_RATIO = 25.0;
   private static final double SLIDE_EXTEND_SPEED = 1;
-  private static final double SLIDE_RETRACT_SPEED = -1;
-  private static final int SLIDE_CURRENT_LIMIT = 20;
+  private static final double SLIDE_RETRACT_SPEED = -0.5;
+  private static final int SLIDE_CURRENT_LIMIT = 25;
 
   // Robot starts closed @ 0
   private static final double SLIDE_TRAVEL_MAX_POS = 4.5;
