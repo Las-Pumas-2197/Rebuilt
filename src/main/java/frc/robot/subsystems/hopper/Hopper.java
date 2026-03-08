@@ -121,6 +121,13 @@ public class Hopper extends SubsystemBase {
   // ===== Commands =====
 
   /** Toggles the slide between extended and retracted based on encoder position. */
+
+  public Command autoExtendSlide() {
+    return this.run(this::extendSlide)
+            .until(() -> getSlidePosition() >= SLIDE_TRAVEL_MAX_POS)
+            .andThen(this.runOnce(this::stopSlide));
+  }
+
   public Command slideCommand() {
     return Commands.defer(() -> {
       m_slideExtended = !m_slideExtended;

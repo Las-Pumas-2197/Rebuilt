@@ -37,16 +37,21 @@ public final class Autos {
             runOnce(setFlywheelVel),
             AutoBuilder.buildAuto("Center Auto"),
             AutoBuilder.buildAuto("Center Auto 2"),
-            waitSeconds(1),
             hopper.slideCommand().withTimeout(2),
             waitSeconds(1),
             new ParallelCommandGroup(
-                runEnd(() -> swerve.drive(new ChassisSpeeds(0.2, 0, 0)),
+                runEnd(() -> swerve.drive(new ChassisSpeeds(-0.2, 0, 0)),
                        () -> swerve.drive(new ChassisSpeeds()), swerve).withTimeout(6),
                 turretTrackCommand.get(),
                 runEnd(feeder::runFeeder, feeder::stopAllFeeder, feeder),
                 runEnd(intake::runIntake, intake::stopRoller, intake)
-            ).withTimeout(12),
+            ).withTimeout(6),
+            new ParallelCommandGroup(
+                hopper.slideCommand().withTimeout(3),
+                turretTrackCommand.get(),
+                runEnd(feeder::runFeeder, feeder::stopAllFeeder, feeder),
+                runEnd(intake::runIntake, intake::stopRoller, intake)
+            ).withTimeout(6),
             runOnce(stopFlywheelVel)
         );
     }
@@ -57,16 +62,21 @@ public final class Autos {
         return new SequentialCommandGroup(
             runOnce(setFlywheelVel),
             AutoBuilder.buildAuto("Alt Center Auto"),
-            waitSeconds(1),
             hopper.slideCommand().withTimeout(2),
             waitSeconds(1),
             new ParallelCommandGroup(
-                runEnd(() -> swerve.drive(new ChassisSpeeds(0.2, 0, 0)),
-                       () -> swerve.drive(new ChassisSpeeds()), swerve).withTimeout(6),
+                runEnd(() -> swerve.drive(new ChassisSpeeds(-0.2, 0, 0)),
+                       () -> swerve.drive(new ChassisSpeeds()), swerve),
                 turretTrackCommand.get(),
                 runEnd(feeder::runFeeder, feeder::stopAllFeeder, feeder),
                 runEnd(intake::runIntake, intake::stopRoller, intake)
-            ).withTimeout(12),
+            ).withTimeout(6),
+            new ParallelCommandGroup(
+                hopper.slideCommand().withTimeout(3),
+                turretTrackCommand.get(),
+                runEnd(feeder::runFeeder, feeder::stopAllFeeder, feeder),
+                runEnd(intake::runIntake, intake::stopRoller, intake)
+            ).withTimeout(6),
             runOnce(stopFlywheelVel)
         );
     }

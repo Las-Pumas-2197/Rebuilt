@@ -113,10 +113,10 @@ public class RobotContainer {
         m_joystick.povRight().onTrue(CycleCommands.rightTunnelCycle(m_swerve, this::hasManualDriveInput));
 
         // Zero slide encoder (for measuring travel distance)
-        // m_joystick.y().onTrue(runOnce(() -> m_hopper.zeroSlideEncoder(), m_hopper));
+        // m_joystick.y().onTrue(runOnce(() -> m_hopper.zeroSlideEncoder(),  m_hopper));
         
         // Toggle slide extend/retract by position
-        // m_joystick2.b().onTrue(m_hopper.slideCommand());
+        m_joystick2.b().onTrue(m_hopper.autoExtendSlide());
 
         // Feed belt and kicker
         m_joystick2.rightTrigger().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));
