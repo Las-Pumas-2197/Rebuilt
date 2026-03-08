@@ -74,28 +74,17 @@ public class RobotContainer {
 
         // Configure autos
         // m_autochooser.setDefaultOption("square", Autos.simpleSquareAuto(m_swerve, m_turret));
-        m_autochooser.setDefaultOption("center auto", 
-            new SequentialCommandGroup(
-                runOnce(() -> turretTargetVel = 0.45),
-                AutoBuilder.buildAuto("Center Auto"),
-                waitSeconds(1),
-                new ParallelCommandGroup(
-                    turretTrackHubCommand(),
-                    runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder),
-                    runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake)
-                ).withTimeout(4),
-                AutoBuilder.buildAuto("Center Auto 2"),
-                waitSeconds(1),
-                // m_hopper.slideCommand(),
-                waitSeconds(1),
-                new ParallelCommandGroup(
-                    runEnd(() -> m_swerve.drive(new ChassisSpeeds(0.2, 0, 0)), () -> m_swerve.drive(new ChassisSpeeds()), m_swerve),
-                    turretTrackHubCommand(),
-                    runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder),
-                    runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake)
-                ).withTimeout(12),
-                runOnce(() -> turretTargetVel = 0)
-        ));
+        m_autochooser.setDefaultOption("center auto",
+            Autos.centerAuto(m_swerve, m_hopper, m_intake, m_feeder,
+            this::turretTrackHubCommand,
+            () -> turretTargetVel = 0.55,
+            () -> turretTargetVel = 0));
+
+        m_autochooser.addOption("center auto left", 
+            Autos.centerAutoLeft(m_swerve, m_hopper, m_intake, m_feeder,
+            this::turretTrackHubCommand,
+            () -> turretTargetVel = 0.55,
+            () -> turretTargetVel = 0));
         // m_autochooser.setDefaultOption("drive under tag 28", Autos.driveUnderTagAuto(m_swerve, 28));
         // m_autochooser.addOption("autoalign reef A", Autos.autoAlignReef(m_swerve, 18));
         SmartDashboard.putData(m_autochooser);
@@ -123,7 +112,7 @@ public class RobotContainer {
         // m_joystick.y().onTrue(runOnce(() -> m_hopper.zeroSlideEncoder(), m_hopper));
         
         // Toggle slide extend/retract by position
-        m_joystick.b().onTrue(m_hopper.slideCommand());
+        m_joystick2.b().onTrue(m_hopper.slideCommand());
 
         // Feed belt and kicker
         m_joystick2.rightTrigger().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));

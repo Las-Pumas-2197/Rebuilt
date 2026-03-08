@@ -6,13 +6,19 @@ import static frc.robot.utils.Constants.SwerveDriveConstants.k_initpose;
 import static frc.robot.utils.Constants.VisionConstants.k_fieldlayout;
 import edu.wpi.first.math.util.Units;
 
+import java.util.function.Supplier;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.turret.Turret;
@@ -23,6 +29,47 @@ import frc.robot.subsystems.turret.Turret;
 public final class Autos {
 
     private Autos() {}
+
+    public static Command centerAuto(
+            Swerve swerve, Hopper hopper, Intake intake, Feeder feeder,
+            Supplier<Command> turretTrackCommand, Runnable setFlywheelVel, Runnable stopFlywheelVel) {
+        return new SequentialCommandGroup(
+            runOnce(setFlywheelVel),
+            AutoBuilder.buildAuto("Center Auto"),
+            AutoBuilder.buildAuto("Center Auto 2"),
+            waitSeconds(1),
+            hopper.slideCommand().withTimeout(3),
+            waitSeconds(1),
+            new ParallelCommandGroup(
+                runEnd(() -> swerve.drive(new ChassisSpeeds(0.2, 0, 0)),
+                       () -> swerve.drive(new ChassisSpeeds()), swerve).withTimeout(6),
+                turretTrackCommand.get(),
+                runEnd(feeder::runFeeder, feeder::stopAllFeeder, feeder),
+                runEnd(intake::runIntake, intake::stopRoller, intake)
+            ).withTimeout(12),
+            runOnce(stopFlywheelVel)
+        );
+    }
+
+    public static Command centerAutoLeft(
+            Swerve swerve, Hopper hopper, Intake intake, Feeder feeder,
+            Supplier<Command> turretTrackCommand, Runnable setFlywheelVel, Runnable stopFlywheelVel) {
+        return new SequentialCommandGroup(
+            runOnce(setFlywheelVel),
+            AutoBuilder.buildAuto("Alt Center Auto"),
+            waitSeconds(1),
+            hopper.slideCommand().withTimeout(3),
+            waitSeconds(1),
+            new ParallelCommandGroup(
+                runEnd(() -> swerve.drive(new ChassisSpeeds(0.2, 0, 0)),
+                       () -> swerve.drive(new ChassisSpeeds()), swerve).withTimeout(6),
+                turretTrackCommand.get(),
+                runEnd(feeder::runFeeder, feeder::stopAllFeeder, feeder),
+                runEnd(intake::runIntake, intake::stopRoller, intake)
+            ).withTimeout(12),
+            runOnce(stopFlywheelVel)
+        );
+    }
 
     /**
      * Auto that cycles through a tag waypoint to the field center and back.
