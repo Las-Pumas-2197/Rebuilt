@@ -101,15 +101,16 @@ public class RobotContainer {
         m_joystick.back().onTrue(runOnce(() -> m_swerve.getCurrentCommand().cancel()));
         // m_joystick.a().onTrue(CycleCommands.createCycleCommand(m_swerve, m_turret, this::hasManualDriveInput));
 
-        // hopper slide bindings (slide motor now in Hopper)
-        m_joystick.rightTrigger().whileTrue(runEnd(() -> m_hopper.extendSlide(), () -> m_hopper.stopSlide(), m_hopper));
-        m_joystick.leftTrigger().whileTrue(runEnd(() -> m_hopper.retractSlide(), () -> m_hopper.stopSlide(), m_hopper));
+        // hopper slide bindings
+        m_joystick2.povUp().whileTrue(runEnd(() -> m_hopper.extendSlide(), () -> m_hopper.stopSlide(), m_hopper));
+        m_joystick2.povDown().whileTrue(runEnd(() -> m_hopper.retractSlide(), () -> m_hopper.stopSlide(), m_hopper));
 
         // intake roller
-        m_joystick.a().toggleOnTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
+        m_joystick.rightTrigger().toggleOnTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
 
-        // cycle through left tunnel
-        m_joystick.b().onTrue(CycleCommands.rightTunnelCycle(m_swerve, this::hasManualDriveInput));
+        // cycle
+        m_joystick.povLeft().onTrue(CycleCommands.leftTunnelCycle(m_swerve, this::hasManualDriveInput));
+        m_joystick.povRight().onTrue(CycleCommands.rightTunnelCycle(m_swerve, this::hasManualDriveInput));
 
         // Zero slide encoder (for measuring travel distance)
         // m_joystick.y().onTrue(runOnce(() -> m_hopper.zeroSlideEncoder(), m_hopper));
@@ -124,6 +125,7 @@ public class RobotContainer {
         new Trigger(() -> this.hasAimInput()).whileTrue(runEnd(() -> turretTargetPos = this.getAimHeading(), () -> turretTargetPos = 0));
 
         m_joystick2.leftTrigger().whileTrue(turretTrackHubCommand());
+
 
         // Shake robot forward/backward
         m_joystick.y().whileTrue(shakeCommand());
