@@ -93,7 +93,7 @@ public class RobotContainer {
                     turretTrackHubCommand(),
                     runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder),
                     runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake)
-                ).withTimeout(8),
+                ).withTimeout(12),
                 runOnce(() -> turretTargetVel = 0)
         ));
         // m_autochooser.setDefaultOption("drive under tag 28", Autos.driveUnderTagAuto(m_swerve, 28));
