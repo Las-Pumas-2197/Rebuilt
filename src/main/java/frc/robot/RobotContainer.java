@@ -85,11 +85,11 @@ public class RobotContainer {
                     runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake)
                 ).withTimeout(4),
                 AutoBuilder.buildAuto("Center Auto 2"),
-                m_hopper.slideCommand(),
                 waitSeconds(1),
-                // AutoBuilder.buildAuto("Center Auto 3"),
-
+                // m_hopper.slideCommand(),
+                waitSeconds(1),
                 new ParallelCommandGroup(
+                    runEnd(() -> m_swerve.drive(new ChassisSpeeds(0.25, 0, 0)), () -> m_swerve.drive(new ChassisSpeeds()), m_swerve),
                     turretTrackHubCommand(),
                     runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder),
                     runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake)
