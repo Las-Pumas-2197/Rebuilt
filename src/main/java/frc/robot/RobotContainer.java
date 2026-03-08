@@ -89,7 +89,7 @@ public class RobotContainer {
                 // m_hopper.slideCommand(),
                 waitSeconds(1),
                 new ParallelCommandGroup(
-                    runEnd(() -> m_swerve.drive(new ChassisSpeeds(0.25, 0, 0)), () -> m_swerve.drive(new ChassisSpeeds()), m_swerve),
+                    runEnd(() -> m_swerve.drive(new ChassisSpeeds(0.2, 0, 0)), () -> m_swerve.drive(new ChassisSpeeds()), m_swerve),
                     turretTrackHubCommand(),
                     runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder),
                     runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake)
