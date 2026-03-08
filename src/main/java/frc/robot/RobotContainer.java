@@ -108,6 +108,9 @@ public class RobotContainer {
         // intake roller
         m_joystick.a().toggleOnTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
 
+        // cycle through left tunnel
+        m_joystick.b().onTrue(CycleCommands.rightTunnelCycle(m_swerve, this::hasManualDriveInput));
+
         // Zero slide encoder (for measuring travel distance)
         // m_joystick.y().onTrue(runOnce(() -> m_hopper.zeroSlideEncoder(), m_hopper));
         
@@ -143,12 +146,12 @@ public class RobotContainer {
         // new Trigger(() -> RobotState.isEnabled()).whileTrue(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
     }
 
-    // private boolean hasManualDriveInput() {
-    //     final double deadband = 0.2;
-    //     return Math.abs(m_joystick.getLeftX()) > deadband
-    //         || Math.abs(m_joystick.getLeftY()) > deadband
-    //         || Math.abs(m_joystick.getRightX()) > deadband;
-    // }
+    private boolean hasManualDriveInput() {
+        final double deadband = 0.2;
+        return Math.abs(m_joystick.getLeftX()) > deadband
+            || Math.abs(m_joystick.getLeftY()) > deadband
+            || Math.abs(m_joystick.getRightX()) > deadband;
+    }
 
     private boolean hasAimInput() {
         return Math.abs(m_joystick2.getLeftY()) > 0.2
@@ -186,8 +189,8 @@ public class RobotContainer {
     }
 
     private Command shakeCommand() {
-        final double shakeSpeed = 2.0; // m/s
-        final double shakeFrequency = 8.0; 
+        final double shakeSpeed = 5.5; // m/s
+        final double shakeFrequency = 5.0; 
         return new RunCommand(() -> {
             double direction = Math.sin(Timer.getFPGATimestamp() * shakeFrequency * 2 * Math.PI) > 0 ? 1 : -1;
             m_swerve.drive(new ChassisSpeeds(direction * shakeSpeed, 0, 0));
