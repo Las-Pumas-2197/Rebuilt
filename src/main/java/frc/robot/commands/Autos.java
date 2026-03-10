@@ -32,7 +32,7 @@ public final class Autos {
 
     public static Command centerAuto(
             Swerve swerve, Hopper hopper, Intake intake, Feeder feeder,
-            Supplier<Command> turretTrackCommand, Runnable setFlywheelVel, Runnable stopFlywheelVel) {
+            Supplier<Command> turretTrackCommand, Supplier<Command> shakeCommand, Runnable setFlywheelVel, Runnable stopFlywheelVel) {
         return new SequentialCommandGroup(
             runOnce(setFlywheelVel),
             AutoBuilder.buildAuto("Center Auto"),
@@ -40,8 +40,8 @@ public final class Autos {
             hopper.slideCommand().withTimeout(2),
             waitSeconds(1),
             new ParallelCommandGroup(
-                runEnd(() -> swerve.drive(new ChassisSpeeds(-0.2, 0, 0)),
-                       () -> swerve.drive(new ChassisSpeeds()), swerve).withTimeout(6),
+                runEnd(() -> swerve.drive(new ChassisSpeeds(-1.25, 0, 0)),
+                       () -> swerve.drive(new ChassisSpeeds()), swerve).withTimeout(2),
                 turretTrackCommand.get(),
                 runEnd(feeder::runFeeder, feeder::stopAllFeeder, feeder),
                 runEnd(intake::runIntake, intake::stopRoller, intake)
@@ -50,23 +50,24 @@ public final class Autos {
                 hopper.slideCommand().withTimeout(3),
                 turretTrackCommand.get(),
                 runEnd(feeder::runFeeder, feeder::stopAllFeeder, feeder),
-                runEnd(intake::runIntake, intake::stopRoller, intake)
-            ).withTimeout(6),
+                runEnd(intake::runIntake, intake::stopRoller, intake),
+                shakeCommand.get()
+            ).withTimeout(8),
             runOnce(stopFlywheelVel)
         );
     }
 
     public static Command centerAutoLeft(
             Swerve swerve, Hopper hopper, Intake intake, Feeder feeder,
-            Supplier<Command> turretTrackCommand, Runnable setFlywheelVel, Runnable stopFlywheelVel) {
+            Supplier<Command> turretTrackCommand, Supplier<Command> shakeCommand, Runnable setFlywheelVel, Runnable stopFlywheelVel) {
         return new SequentialCommandGroup(
             runOnce(setFlywheelVel),
             AutoBuilder.buildAuto("Alt Center Auto"),
             hopper.slideCommand().withTimeout(2),
             waitSeconds(1),
             new ParallelCommandGroup(
-                runEnd(() -> swerve.drive(new ChassisSpeeds(-0.2, 0, 0)),
-                       () -> swerve.drive(new ChassisSpeeds()), swerve),
+                runEnd(() -> swerve.drive(new ChassisSpeeds(-1.25, 0, 0)),
+                       () -> swerve.drive(new ChassisSpeeds()), swerve).withTimeout(2),
                 turretTrackCommand.get(),
                 runEnd(feeder::runFeeder, feeder::stopAllFeeder, feeder),
                 runEnd(intake::runIntake, intake::stopRoller, intake)
@@ -75,8 +76,9 @@ public final class Autos {
                 hopper.slideCommand().withTimeout(3),
                 turretTrackCommand.get(),
                 runEnd(feeder::runFeeder, feeder::stopAllFeeder, feeder),
-                runEnd(intake::runIntake, intake::stopRoller, intake)
-            ).withTimeout(6),
+                runEnd(intake::runIntake, intake::stopRoller, intake),
+                shakeCommand.get()
+            ).withTimeout(8),
             runOnce(stopFlywheelVel)
         );
     }

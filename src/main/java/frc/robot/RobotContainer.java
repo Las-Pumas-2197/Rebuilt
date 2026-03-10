@@ -64,6 +64,8 @@ public class RobotContainer {
     private double turretTargetPos = 0.0;
     private double turretTargetVel = 0.0;
 
+    private double drivespeedmult = 4;
+
     public RobotContainer() {
 
         // start data logging
@@ -77,13 +79,15 @@ public class RobotContainer {
         m_autochooser.setDefaultOption("center auto",
             Autos.centerAuto(m_swerve, m_hopper, m_intake, m_feeder,
             this::turretTrackHubCommand,
-            () -> turretTargetVel = 0.55,
+            this::shakeCommand,
+            () -> turretTargetVel = 0.62,
             () -> turretTargetVel = 0));
 
         m_autochooser.addOption("center auto left", 
             Autos.centerAutoLeft(m_swerve, m_hopper, m_intake, m_feeder,
             this::turretTrackHubCommand,
-            () -> turretTargetVel = 0.55,
+            this::shakeCommand,
+            () -> turretTargetVel = 0.62,
             () -> turretTargetVel = 0));
         // m_autochooser.setDefaultOption("drive under tag 28", Autos.driveUnderTagAuto(m_swerve, 28));
         // m_autochooser.addOption("autoalign reef A", Autos.autoAlignReef(m_swerve, 18));
@@ -125,6 +129,9 @@ public class RobotContainer {
         new Trigger(() -> this.hasAimInput()).whileTrue(runEnd(() -> turretTargetPos = this.getAimHeading(), () -> turretTargetPos = 0));
 
         m_joystick2.leftTrigger().whileTrue(turretTrackHubCommand());
+
+        m_joystick.leftBumper().whileTrue(runEnd(() -> drivespeedmult = 1, () -> drivespeedmult = k_maxlinspeedteleop));
+        m_joystick.rightBumper().whileTrue(runEnd(() -> drivespeedmult = k_maxlinspeedturbo, () -> drivespeedmult = k_maxlinspeedteleop));
 
 
         // Shake robot forward/backward
@@ -176,8 +183,8 @@ public class RobotContainer {
     private Command swerveDefaultCommand() {
         return new
             RunCommand(() -> m_swerve.drive(new ChassisSpeeds(
-                -MathUtil.applyDeadband(m_joystick.getLeftY(), 0.2) * (m_joystick.rightBumper().getAsBoolean() ? k_maxlinspeedturbo : k_maxlinspeedteleop),
-                -MathUtil.applyDeadband(m_joystick.getLeftX(), 0.2) * (m_joystick.rightBumper().getAsBoolean() ? k_maxlinspeedturbo : k_maxlinspeedteleop),
+                -MathUtil.applyDeadband(m_joystick.getLeftY(), 0.2) * drivespeedmult,
+                -MathUtil.applyDeadband(m_joystick.getLeftX(), 0.2) * drivespeedmult,
                 -MathUtil.applyDeadband(m_joystick.getRightX(), 0.2) * k_maxrotspeedteleop)),
             m_swerve);
     }
