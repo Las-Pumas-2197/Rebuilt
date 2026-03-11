@@ -123,6 +123,15 @@ public class Swerve extends SubsystemBase {
     m_swervedrive.driveFieldOriented(speeds);
   }
 
+  /**
+   * Robot-relative driving method.
+   *
+   * @param speeds Composed robot-relative speeds.
+   */
+  public void driveRobotRelative(ChassisSpeeds speeds) {
+    m_swervedrive.drive(speeds, false, new Translation2d());
+  }
+
   /** Returns the current pose of the robot. */
   public Pose2d getPose() {
     return m_swervedrive.getPose();

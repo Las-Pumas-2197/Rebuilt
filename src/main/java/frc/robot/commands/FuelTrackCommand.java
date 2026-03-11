@@ -18,8 +18,10 @@ public class FuelTrackCommand extends Command {
 
     private static final int FUEL_CLASS_ID = 0;
     private static final double DRIVE_SPEED = 1.5;  // m/s forward
-    private static final double STEER_KP = 0.03;    // proportional gain on tx (degrees -> rad/s)
+    private static final double STEER_KP = 0.03;
     private static final double MIN_AREA = 0.002;   // ignore tiny detections
+    private static final double TX_DEADBAND = 10.0; // degrees — no steering correction within this range
+    private static final double IDLE_RPS = 1.5;
 
     private final Swerve m_swerve;
 
@@ -48,23 +50,22 @@ public class FuelTrackCommand extends Command {
 
         if (fuelCount == 0 || totalArea == 0) {
             // No fuel detected, drive forward slowly
-           m_swerve.resetGyro();
-            m_swerve.drive(new ChassisSpeeds(0, 0, 1.5));
+            m_swerve.driveRobotRelative(new ChassisSpeeds(0, 0, IDLE_RPS));
             return;
         }
 
         double avgTx = weightedTx / totalArea;
-        double rotSpeed = -STEER_KP * avgTx;
+        // Only steer if the target is outside the acceptable range
+        double rotSpeed = Math.abs(avgTx) > TX_DEADBAND ? -STEER_KP * avgTx : 0;
 
         SmartDashboard.putNumber("FuelTrack/AvgTx", avgTx);
         SmartDashboard.putNumber("FuelTrack/RotSpeed", rotSpeed);
 
-        m_swerve.resetGyro();
-        m_swerve.drive(new ChassisSpeeds(DRIVE_SPEED, 0, rotSpeed));
+        m_swerve.driveRobotRelative(new ChassisSpeeds(DRIVE_SPEED, 0, rotSpeed));
     }
 
     @Override
     public void end(boolean interrupted) {
-        m_swerve.drive(new ChassisSpeeds());
+        m_swerve.driveRobotRelative(new ChassisSpeeds());
     }
 }
