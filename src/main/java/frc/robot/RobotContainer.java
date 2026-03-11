@@ -112,6 +112,7 @@ public class RobotContainer {
 
         // intake roller
         m_joystick.rightTrigger().whileTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
+        m_joystick.a().whileTrue(runEnd(() -> m_intake.runEject(), () -> m_intake.stopRoller(), m_intake));
 
         // fuel tracking — drive toward detected balls
         m_joystick.leftTrigger().whileTrue(new FuelTrackCommand(m_swerve));
