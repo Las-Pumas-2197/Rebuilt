@@ -35,6 +35,7 @@ import com.pathplanner.lib.pathfinding.Pathfinding;
 
 import frc.robot.commands.Autos;
 import frc.robot.commands.CycleCommands;
+import frc.robot.commands.FuelTrackCommand;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.hopper.Hopper;
@@ -111,6 +112,9 @@ public class RobotContainer {
 
         // intake roller
         m_joystick.rightTrigger().whileTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
+
+        // fuel tracking — drive toward detected balls
+        m_joystick.leftTrigger().whileTrue(new FuelTrackCommand(m_swerve));
 
         // cycle
         m_joystick.povLeft().onTrue(CycleCommands.leftTunnelCycle(m_swerve, this::hasManualDriveInput));
