@@ -20,7 +20,7 @@ public class FuelTrackCommand extends Command {
     private static final double DRIVE_SPEED = 1.5;  // m/s forward
     private static final double STEER_KP = 0.03;
     private static final double MIN_AREA = 0.002;   // ignore tiny detections
-    private static final double TX_DEADBAND = 20.0; // degrees — no correction within this range
+    private static final double TX_DEADBAND = 25.0; // degrees — no correction within this range
     private static final double IDLE_RPS = 1.5;
 
     private final Swerve m_swerve;
@@ -49,7 +49,7 @@ public class FuelTrackCommand extends Command {
         SmartDashboard.putNumber("FuelTrack/Count", fuelCount);
 
         if (fuelCount == 0 || totalArea == 0) {
-            // No fuel detected, rotate slowly
+            // No fuel detected
             m_swerve.driveRobotRelative(new ChassisSpeeds(0, 0, IDLE_RPS));
             return;
         }
