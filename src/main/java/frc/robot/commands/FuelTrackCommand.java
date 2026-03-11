@@ -17,9 +17,9 @@ import frc.robot.utils.LimelightHelpers.RawDetection;
 public class FuelTrackCommand extends Command {
 
     private static final int FUEL_CLASS_ID = 0;
-    private static final double DRIVE_SPEED = 0.1;  // m/s forward
-    private static final double STEER_KP = 0.04;    // proportional gain on tx (degrees -> rad/s)
-    private static final double MIN_AREA = 0.005;   // ignore tiny detections
+    private static final double DRIVE_SPEED = 1.5;  // m/s forward
+    private static final double STEER_KP = 0.03;    // proportional gain on tx (degrees -> rad/s)
+    private static final double MIN_AREA = 0.002;   // ignore tiny detections
 
     private final Swerve m_swerve;
 
@@ -48,7 +48,8 @@ public class FuelTrackCommand extends Command {
 
         if (fuelCount == 0 || totalArea == 0) {
             // No fuel detected, drive forward slowly
-            m_swerve.drive(new ChassisSpeeds(DRIVE_SPEED * 0.5, 0, 0));
+           m_swerve.resetGyro();
+            m_swerve.drive(new ChassisSpeeds(0, 0, 1.5));
             return;
         }
 
@@ -58,6 +59,7 @@ public class FuelTrackCommand extends Command {
         SmartDashboard.putNumber("FuelTrack/AvgTx", avgTx);
         SmartDashboard.putNumber("FuelTrack/RotSpeed", rotSpeed);
 
+        m_swerve.resetGyro();
         m_swerve.drive(new ChassisSpeeds(DRIVE_SPEED, 0, rotSpeed));
     }
 
