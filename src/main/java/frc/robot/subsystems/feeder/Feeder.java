@@ -20,15 +20,20 @@ public class Feeder extends SubsystemBase {
   // Motors
   private final SparkFlex m_kickerMotor;
   private final SparkFlex m_feedRampMotor;
+  private final SparkFlex m_conveyorMotor;
 
   private static final double KICKER_SPEED = 1;
   private static final double KICKER_REVERSE_SPEED = -0.5;
+  private static final double CONVEYOR_REVERSE_SPEED = -1;
 
   private static final int KICKER_CURRENT_LIMIT = 30;
   private static final int FEEDRAMP_CURRENT_LIMIT = 40;
+  private static final int CONVEYOR_CURRENT_LIMIT = 60;
 
   private static final double FEEDRAMP_FEED_SPEED = -1;
   private static final double FEEDRAMP_REVERSE_SPEED = 1;
+  private static final double CONVEYOR_FEED_SPEED = 1;
+
 
   public Feeder() {
     // Kicker wheel
@@ -36,6 +41,9 @@ public class Feeder extends SubsystemBase {
 
     // Feed ramp
     m_feedRampMotor = new SparkFlex(CANIDs.HOPPER_FEEDRAMP, MotorType.kBrushless);
+
+    // Conveyor
+    m_conveyorMotor = new SparkFlex(CANIDs.HOPPER_CONVEYOR, MotorType.kBrushless);
 
     // Configure motors
     configureMotors();
@@ -51,6 +59,12 @@ public class Feeder extends SubsystemBase {
     feedRampConfig.idleMode(IdleMode.kBrake);
     feedRampConfig.smartCurrentLimit(FEEDRAMP_CURRENT_LIMIT);
     m_feedRampMotor.configure(feedRampConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+    // Conveyor config — currently removed
+    SparkFlexConfig conveyorConfig = new SparkFlexConfig();
+    conveyorConfig.idleMode(IdleMode.kCoast);
+    conveyorConfig.smartCurrentLimit(CONVEYOR_CURRENT_LIMIT);
+    m_conveyorMotor.configure(conveyorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   // ===== Kicker Control =====
@@ -85,15 +99,35 @@ public class Feeder extends SubsystemBase {
     m_feedRampMotor.set(speed);
   }
 
+  // ===== Conveyor Control =====
+
+  public void runConveyor() {
+    m_conveyorMotor.set(CONVEYOR_FEED_SPEED);
+  }
+
+  public void reverseConveyor() {
+    m_conveyorMotor.set(CONVEYOR_REVERSE_SPEED);
+  }
+
+  public void stopConveyor() {
+    m_conveyorMotor.set(0);
+  }
+
+  public void setConveyorSpeed(double speed) {
+    m_conveyorMotor.set(speed);
+  }
+
   // ===== Combined Operations =====
 
   public void stopAllFeeder() {
     m_kickerMotor.stopMotor();
     m_feedRampMotor.stopMotor();
+    m_conveyorMotor.stopMotor();
   }
 
   public void runFeeder() {
     runKicker();
     runFeedRamp();
+    runConveyor();
   }
 }

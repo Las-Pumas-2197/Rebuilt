@@ -121,15 +121,18 @@ public class RobotContainer {
         m_joystick.povLeft().onTrue(CycleCommands.leftTunnelCycle(m_swerve, this::hasManualDriveInput));
         m_joystick.povRight().onTrue(CycleCommands.rightTunnelCycle(m_swerve, this::hasManualDriveInput));
 
+        // conveyor commands
+        // m_joystick2.y().whileTrue(runEnd(() -> m_hopper.runConveyor(), () -> m_hopper.stopConveyor(), m_hopper));
+
         // Zero slide encoder (for measuring travel distance)
         // m_joystick.y().onTrue(runOnce(() -> m_hopper.zeroSlideEncoder(),  m_hopper));
         
         // Toggle slide extend/retract by position
-        m_joystick2.b().onTrue(m_hopper.autoExtendSlide());
+        m_joystick2.b().onTrue(m_hopper.slideCommand());
 
         // Feed belt and kicker
         m_joystick2.rightTrigger().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));
-        m_joystick2.start().onTrue(runOnce(() -> turretTargetVel = 0.5));
+        m_joystick2.start().onTrue(runOnce(() -> turretTargetVel = 0.1));
         m_joystick2.back().onTrue(runOnce(() -> turretTargetVel = 0));
         new Trigger(() -> this.hasAimInput()).whileTrue(runEnd(() -> turretTargetPos = this.getAimHeading(), () -> turretTargetPos = 0));
 
@@ -216,7 +219,9 @@ public class RobotContainer {
             Pose2d robotPose = m_swerve.getPose();
             Pose2d targetPose = getTargetPose();
             double angleToHub = MathUtil.angleModulus(m_turret.calculateAngleToFieldPose(robotPose, targetPose) + Math.PI);
-            m_turret.turretCL(0.5, angleToHub);
+            // m_turret.turretCL(0.5, angleToHub);
+            m_turret.turretCL(0.5, 0);
+
         }, m_turret);
     }
 
