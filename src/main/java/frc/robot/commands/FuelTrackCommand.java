@@ -7,7 +7,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Swerve;
 import frc.robot.utils.LimelightHelpers;
-import frc.robot.utils.LimelightHelpers.RawDetection;
+import frc.robot.utils.LimelightHelpers.LimelightResults;
+import frc.robot.utils.LimelightHelpers.LimelightTarget_Detector;
 
 /**
  * Drives toward the largest cluster of detected FUEL (balls) using the Limelight.
@@ -32,15 +33,16 @@ public class FuelTrackCommand extends Command {
 
     @Override
     public void execute() {
-        RawDetection[] detections = LimelightHelpers.getRawDetections(k_limelightname);
+        LimelightResults results = LimelightHelpers.getLatestResults(k_limelightname);
+        LimelightTarget_Detector[] detections = results.targets_Detector;
 
         double weightedTx = 0;
         double totalArea = 0;
         int fuelCount = 0;
 
-        for (RawDetection det : detections) {
-            if (det.classId == FUEL_CLASS_ID && det.ta > MIN_AREA) {
-                weightedTx += det.txnc * det.ta;
+        for (LimelightTarget_Detector det : detections) {
+            if ((int) det.classID == FUEL_CLASS_ID && det.ta > MIN_AREA) {
+                weightedTx += det.tx * det.ta;
                 totalArea += det.ta;
                 fuelCount++;
             }
