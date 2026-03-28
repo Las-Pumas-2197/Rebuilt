@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -49,6 +50,7 @@ public class RobotContainer {
     // Controllers
     private final CommandXboxController m_joystick = new CommandXboxController(k_joystickport);
     private final CommandXboxController m_joystick2 = new CommandXboxController(1);
+    private final CommandGenericHID m_joystick3 = new CommandGenericHID(2);
 
     // Subsystems
     private final Vision m_vision = new Vision();
@@ -64,6 +66,7 @@ public class RobotContainer {
 
     private double turretTargetPos = 0.0;
     private double turretTargetVel = 0.0;
+    private double slideTargetPos = 0.0;
 
     private double drivespeedmult = 4;
 
@@ -98,6 +101,7 @@ public class RobotContainer {
         m_vision.setDefaultCommand(visionDefaultCommand());
         m_swerve.setDefaultCommand(swerveDefaultCommand());
         m_turret.setDefaultCommand(turretDefaultCommand());
+        m_hopper.setDefaultCommand(hopperDefaultCommand());
 
         configureBindings();
     }
@@ -107,19 +111,27 @@ public class RobotContainer {
         // m_joystick.a().onTrue(CycleCommands.createCycleCommand(m_swerve, m_turret, this::hasManualDriveInput));
 
         // hopper slide bindings
-        m_joystick2.povUp().whileTrue(runEnd(() -> m_hopper.extendSlide(), () -> m_hopper.stopSlide(), m_hopper));
-        m_joystick2.povDown().whileTrue(runEnd(() -> m_hopper.retractSlide(), () -> m_hopper.stopSlide(), m_hopper));
+        m_joystick3.button(11).whileTrue(runEnd(() -> m_hopper.extendSlide(), () -> m_hopper.stopSlide(), m_hopper));
+        m_joystick3.button(12).whileTrue(runEnd(() -> m_hopper.retractSlide(), () -> m_hopper.stopSlide(), m_hopper));
 
         // intake roller
         m_joystick.rightTrigger().whileTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
         m_joystick.a().whileTrue(runEnd(() -> m_intake.runEject(), () -> m_intake.stopRoller(), m_intake));
 
         // fuel tracking — drive toward detected balls
-        m_joystick.leftTrigger().whileTrue(new FuelTrackCommand(m_swerve));
+        // m_joystick.leftTrigger().whileTrue(new FuelTrackCommand(m_swerve));
 
         // cycle
         m_joystick.povLeft().onTrue(CycleCommands.leftTunnelCycle(m_swerve, this::hasManualDriveInput));
         m_joystick.povRight().onTrue(CycleCommands.rightTunnelCycle(m_swerve, this::hasManualDriveInput));
+
+        m_joystick.leftTrigger().whileTrue(run(() -> m_swerve.driveRobotRelative(
+            new ChassisSpeeds(
+                -MathUtil.applyDeadband(m_joystick.getLeftY(), 0.2) * drivespeedmult,
+                -MathUtil.applyDeadband(m_joystick.getLeftX(), 0.2) * drivespeedmult,
+                -MathUtil.applyDeadband(m_joystick.getRightX(), 0.2) * k_maxrotspeedteleop))
+            , m_swerve)
+        );
 
         // conveyor commands
         // m_joystick2.y().whileTrue(runEnd(() -> m_hopper.runConveyor(), () -> m_hopper.stopConveyor(), m_hopper));
@@ -128,24 +140,29 @@ public class RobotContainer {
         // m_joystick.y().onTrue(runOnce(() -> m_hopper.zeroSlideEncoder(),  m_hopper));
         
         // Toggle slide extend/retract by position
-        m_joystick2.b().onTrue(m_hopper.slideCommand());
+        // m_joystick2.b().onTrue(m_hopper.slideCommand());
 
         // Feed belt and kicker
-        m_joystick2.rightTrigger().whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));
-        m_joystick2.start().onTrue(runOnce(() -> turretTargetVel = 0.1));
-        m_joystick2.back().onTrue(runOnce(() -> turretTargetVel = 0));
+        m_joystick3.button(8).whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));
+        // m_joystick2.start().onTrue(runOnce(() -> turretTargetVel = 0.1));
+        // m_joystick2.back().onTrue(runOnce(() -> turretTargetVel = 0));
         new Trigger(() -> this.hasAimInput()).whileTrue(runEnd(() -> turretTargetPos = this.getAimHeading(), () -> turretTargetPos = 0));
 
-        m_joystick2.leftTrigger().whileTrue(turretTrackHubCommand());
+        m_joystick3.button(3).toggleOnTrue(turretTrackHubCommand());
 
         m_joystick.leftBumper().whileTrue(runEnd(() -> drivespeedmult = 1, () -> drivespeedmult = k_maxlinspeedteleop));
         m_joystick.rightBumper().whileTrue(runEnd(() -> drivespeedmult = k_maxlinspeedturbo, () -> drivespeedmult = k_maxlinspeedteleop));
 
 
         // Shake robot forward/backward
-        m_joystick.y().whileTrue(shakeCommand());
+        // m_joystick.y().whileTrue(shakeCommand());
 
         m_joystick.x().onTrue(runOnce(() -> m_swerve.resetGyro()));
+
+        // hopper positions
+        // m_joystick3.button(5).onTrue(runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[0]));
+        m_joystick3.button(6).onTrue(runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[1]));
+        m_joystick3.button(7).onTrue(runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[2]));
 
         // turret
         // m_joystick.rightTrigger().whileTrue(runEnd(() -> m_turret.spinUpFlywheels(), () -> m_turret.stopAllShooter(), m_turret));
@@ -205,6 +222,10 @@ public class RobotContainer {
         ), m_turret);
     }
 
+    private Command hopperDefaultCommand() {
+        return new RunCommand(() -> m_hopper.slideCL(slideTargetPos), m_hopper);
+    }
+
     private Command shakeCommand() {
         final double shakeSpeed = 5.5; // m/s
         final double shakeFrequency = 5.0; 
@@ -219,8 +240,8 @@ public class RobotContainer {
             Pose2d robotPose = m_swerve.getPose();
             Pose2d targetPose = getTargetPose();
             double angleToHub = MathUtil.angleModulus(m_turret.calculateAngleToFieldPose(robotPose, targetPose) + Math.PI);
-            // m_turret.turretCL(0.5, angleToHub);
-            m_turret.turretCL(0.5, 0);
+            m_turret.turretCL(0.5, angleToHub);
+            // m_turret.turretCL(0.5, 0);
 
         }, m_turret);
     }
