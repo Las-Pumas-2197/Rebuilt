@@ -246,6 +246,20 @@ public class RobotContainer {
         }, m_turret);
     }
 
+    // private Command turretTrackHubLeadCommand() {
+    //     final double avgBallSpeed = 3.0; // m/s — tune 
+    //     return new RunCommand(() -> {
+    //         Pose2d robotPose = m_swerve.getPose();
+    //         Pose2d targetPose = getTargetPose();
+    //         ChassisSpeeds fieldSpeeds = m_swerve.getFieldSpeeds();
+    //         double distance = robotPose.getTranslation().getDistance(targetPose.getTranslation());
+    //         double flywheelSpeed = m_turret.interpolateFlywheelSpeed(distance);
+    //         double leadAngle = MathUtil.angleModulus(
+    //             m_turret.calculateLeadCorrectedAngle(robotPose, targetPose, fieldSpeeds, avgBallSpeed) + Math.PI);
+    //         m_turret.turretCL(flywheelSpeed, leadAngle);
+    //     }, m_turret);
+    // }
+
     public Command getAutonomousCommand() {
         return m_autochooser.getSelected();
     }
