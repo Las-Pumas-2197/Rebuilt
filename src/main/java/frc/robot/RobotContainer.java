@@ -6,8 +6,7 @@ package frc.robot;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 import static frc.robot.utils.Constants.OIConstants.*;
-import static frc.robot.utils.Constants.PathfindingConstants.k_basinCenter;
-import static frc.robot.utils.Constants.PathfindingConstants.k_redBasinCenter;
+import static frc.robot.utils.Constants.PathfindingConstants.*;
 
 import edu.wpi.first.math.geometry.Pose2d;
 
@@ -200,7 +199,10 @@ public class RobotContainer {
         ParallelCommandGroup cmd = new ParallelCommandGroup();
             if (RobotBase.isSimulation())
         cmd.addCommands(run(() -> m_vision.updateSimPose(m_swerve.getSimPose())));
-        cmd.addCommands(run(() -> m_swerve.addVisionMeasurements(m_vision.getEstimates())));
+        cmd.addCommands(run(() -> {
+            m_vision.updateFrontCameraSlideOffset(m_hopper.getSlideExtensionFraction());
+            m_swerve.addVisionMeasurements(m_vision.getEstimates());
+        }));
         cmd.addRequirements(m_vision);
         return cmd;
     }
@@ -241,8 +243,6 @@ public class RobotContainer {
             Pose2d targetPose = getTargetPose();
             double angleToHub = MathUtil.angleModulus(m_turret.calculateAngleToFieldPose(robotPose, targetPose) + Math.PI);
             m_turret.turretCL(0.5, angleToHub);
-            // m_turret.turretCL(0.5, 0);
-
         }, m_turret);
     }
 
@@ -250,17 +250,32 @@ public class RobotContainer {
         return m_autochooser.getSelected();
     }
 
-    /** Returns the turret target pose based on the current alliance. */
+    /** Returns the turret target pose based on alliance and robot position.
+     *  When past the midfield, aims at pass-back locations instead of the basin. */
     public Pose2d getTargetPose() {
+        Pose2d robotPose = m_swerve.getPose();
+        double x = robotPose.getX();
+        double y = robotPose.getY();
         var alliance = DriverStation.getAlliance();
-        if (alliance.isPresent()) {
-            return alliance.get() == DriverStation.Alliance.Red ? k_redBasinCenter : k_basinCenter;
-        } else { 
+        boolean isRed = alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
+
+        if (isRed) {
+            if (x < k_redMidfieldX) {
+                return y > 4 ? k_redPassBackUpper : k_redPassBackLower;
+            }
+            return k_redBasinCenter;
+        } else {
+            if (x > k_blueMidfieldX) {
+                return y > 4 ? k_bluePassBackUpper : k_bluePassBackLower;
+            }
             return k_basinCenter;
         }
     }
 
     public void testRun() {
         SmartDashboard.putNumber("turret heading", turretTargetPos);
+        Pose2d target = getTargetPose();
+        SmartDashboard.putNumberArray("Turret Target",
+            new double[] { target.getX(), target.getY(), target.getRotation().getDegrees() });
     }
 }

@@ -96,6 +96,11 @@ public class Hopper extends SubsystemBase {
     return m_slideEncoder.getPosition();
   }
 
+  /** Returns 0.0 when retracted, 1.0 when fully extended. */
+  public double getSlideExtensionFraction() {
+    return Math.min(1.0, Math.max(0.0, getSlidePosition() / SLIDE_TRAVEL_MAX_POS));
+  }
+
   public void zeroSlideEncoder() {
     m_slideEncoder.setPosition(0);
   }

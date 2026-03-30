@@ -297,16 +297,6 @@ public class Turret extends SubsystemBase {
   }
 
 
-
-
-
-
-
-
-
-
-
-
   public void turretCL(double vel, double pos) {
     m_rotationPID.setGoal(clampYaw(pos)); 
     double turretPIDout = (m_rotationPID.calculate(m_currentYaw) / (2*Math.PI)) * 12;

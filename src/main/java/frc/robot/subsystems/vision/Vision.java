@@ -12,7 +12,9 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -27,15 +29,17 @@ import java.util.Optional;
 
 public class Vision extends SubsystemBase {
 
-  /** Vision cameras for pose estimation. */
-  private final List<VisionCamera> m_cameras = new ArrayList<>();
+  /** Vision cameras for pose estimation. Swap VisionCamera / VisionCameraNew below to switch. */
+  // private final List<VisionCamera> m_cameras = new ArrayList<>();
+  private final List<VisionCameraNew> m_cameras = new ArrayList<>();
 
   private VisionSystemSim m_visionsim;
 
   public Vision() {
     // Instantiate vision cameras
     for (int num = 0; num < k_cameranames.size(); num++) {
-      m_cameras.add(new VisionCamera(k_cameranames.get(num), k_cameraintrinsics.get(num)));
+      // m_cameras.add(new VisionCamera(k_cameranames.get(num), k_cameraintrinsics.get(num)));
+      m_cameras.add(new VisionCameraNew(k_cameranames.get(num), k_cameraintrinsics.get(num)));
     }
 
     // Vision simulation setup
@@ -118,8 +122,30 @@ public class Vision extends SubsystemBase {
   }
 
   /** Returns a list of the vision system camera instances. */
-  public List<VisionCamera> getCameras() {
+  // public List<VisionCamera> getCameras() {
+  //   return m_cameras;
+  // }
+
+  /** Returns a list of the vision system camera instances. */
+  public List<VisionCameraNew> getCameras() {
     return m_cameras;
+  }
+
+  /**
+   * Updates the front two camera transforms based on hopper slide extension.
+   * Cameras 0 (FL) and 1 (FR) are mounted on the hopper and slide forward up to 12 inches.
+   *
+   * @param extensionFraction 0.0 = retracted, 1.0 = fully extended
+   */
+  public void updateFrontCameraSlideOffset(double extensionFraction) {
+    double xOffset = extensionFraction * Units.inchesToMeters(12);
+    for (int i = 0; i < 2; i++) {
+      Transform3d base = k_cameraintrinsics.get(i);
+      Transform3d updated = new Transform3d(
+          base.getX() + xOffset, base.getY(), base.getZ(),
+          base.getRotation());
+      m_cameras.get(i).updateTransform(updated);
+    }
   }
 
   /** Used to update the pose of the vision sim periodically.
