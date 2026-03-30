@@ -37,7 +37,7 @@ public final class Autos {
             runOnce(setFlywheelVel),
             AutoBuilder.buildAuto("Center Auto"),
             AutoBuilder.buildAuto("Center Auto 2"),
-            // hopper.slideCommand().withTimeout(2),
+            hopper.slideCommand().withTimeout(2),
             waitSeconds(1),
             new ParallelCommandGroup(
                 runEnd(() -> swerve.drive(new ChassisSpeeds(-1.25, 0, 0)),
@@ -47,7 +47,7 @@ public final class Autos {
                 runEnd(intake::runIntake, intake::stopRoller, intake)
             ).withTimeout(6),
             new ParallelCommandGroup(
-                // hopper.slideCommand().withTimeout(3),
+                hopper.slideCommand().withTimeout(3),
                 turretTrackCommand.get(),
                 runEnd(feeder::runFeeder, feeder::stopAllFeeder, feeder),
                 runEnd(intake::runIntake, intake::stopRoller, intake),
@@ -63,7 +63,7 @@ public final class Autos {
         return new SequentialCommandGroup(
             runOnce(setFlywheelVel),
             AutoBuilder.buildAuto("Alt Center Auto"),
-            // hopper.slideCommand().withTimeout(2),
+            hopper.slideCommand().withTimeout(2),
             waitSeconds(1),
             new ParallelCommandGroup(
                 runEnd(() -> swerve.drive(new ChassisSpeeds(-1.25, 0, 0)),
@@ -73,7 +73,7 @@ public final class Autos {
                 runEnd(intake::runIntake, intake::stopRoller, intake)
             ).withTimeout(6),
             new ParallelCommandGroup(
-                // hopper.slideCommand().withTimeout(3),
+                hopper.slideCommand().withTimeout(3),
                 turretTrackCommand.get(),
                 runEnd(feeder::runFeeder, feeder::stopAllFeeder, feeder),
                 runEnd(intake::runIntake, intake::stopRoller, intake),
@@ -164,7 +164,7 @@ public final class Autos {
 
         return sequence(
             // 1. Run hopper slide command (extend)
-            // hopper.slideCommand(),
+            hopper.slideCommand(),
             // 2. Drive to (8, 0.5), turning 90° left
             defer(() -> swerve.pathfindToPose(farPose, true, 0.0), java.util.Set.of(swerve)),
             // 3. Run intake while driving to field center
@@ -192,7 +192,7 @@ public final class Autos {
 
         return sequence(
             // 1. Run hopper slide command (extend)
-            // hopper.slideCommand(),
+            hopper.slideCommand(),
             // 2. Drive to (8.2, 0.5), turning 90° left
             defer(() -> swerve.pathfindToPose(farPose, true, 0.0), java.util.Set.of(swerve)),
             // 3. Run intake while driving to field center

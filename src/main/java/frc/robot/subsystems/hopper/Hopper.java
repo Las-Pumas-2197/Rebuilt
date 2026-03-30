@@ -14,9 +14,6 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -31,34 +28,20 @@ public class Hopper extends SubsystemBase {
   // Slide motor
   private final SparkFlex m_slideMotor;
   private final RelativeEncoder m_slideEncoder;
-  private final SimpleMotorFeedforward m_slideFF;
-  private final ProfiledPIDController m_slidePID;
 
-  private static final double SLIDE_GEAR_RATIO = 16;
-  private static final double SLIDE_EXTEND_SPEED = -0.1;
-  private static final double SLIDE_RETRACT_SPEED = 0.1;
+  private static final double SLIDE_GEAR_RATIO = 25.0;
+  private static final double SLIDE_EXTEND_SPEED = -0.2;
+  private static final double SLIDE_RETRACT_SPEED = 0.2;
   private static final int SLIDE_CURRENT_LIMIT = 40;
-  private static final double SLIDE_MOTOR_MAX_RPM = 6784 / SLIDE_GEAR_RATIO;
 
   // Robot starts closed @ 0
-  private static final double SLIDE_TRAVEL_MAX_POS = -68.75;
-  private static final double SLIDE_TRAVEL_RETRACT_POS = -23;
-  private static final double SLIDE_TRAVEL_MIN_POS = 0;
+  private static final double SLIDE_TRAVEL_MAX_POS = -0.5;
+  private static final double SLIDE_TRAVEL_MIN_POS = -0.2;
 
   public Hopper() {
     // Slide motor
     m_slideMotor = new SparkFlex(CANIDs.INTAKE_SLIDE, MotorType.kBrushless);
     m_slideEncoder = m_slideMotor.getEncoder();
-
-    // Slide motor PID
-    m_slideFF = new SimpleMotorFeedforward(
-      0.35, 
-      12 / SLIDE_MOTOR_MAX_RPM);
-    m_slidePID = new ProfiledPIDController(
-      15, 
-      0, 
-      0, 
-      new TrapezoidProfile.Constraints(SLIDE_MOTOR_MAX_RPM / 2, SLIDE_MOTOR_MAX_RPM / 2));
 
     configureMotors();
   }
@@ -70,7 +53,7 @@ public class Hopper extends SubsystemBase {
     slideConfig.idleMode(IdleMode.kBrake);
     slideConfig.smartCurrentLimit(SLIDE_CURRENT_LIMIT);
     // Convert encoder from motor rotations to output shaft rotations
-    slideConfig.encoder.positionConversionFactor(1.0);
+    slideConfig.encoder.positionConversionFactor(1.0 / SLIDE_GEAR_RATIO);
     m_slideMotor.configure(slideConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
@@ -107,57 +90,33 @@ public class Hopper extends SubsystemBase {
 
   // ===== State =====
 
-  // private boolean m_slideExtended = false;
+  private boolean m_slideExtended = false;
 
   // ===== Commands =====
 
   /** Toggles the slide between extended and retracted based on encoder position. */
 
-  // public Command autoExtendSlide() {
-  //   return this.run(this::extendSlide)
-  //           .until(() -> getSlidePosition() <= SLIDE_TRAVEL_MAX_POS)
-  //           .andThen(this.runOnce(this::stopSlide));
-  // }
-
-  // public Command slideCommand() {
-  //   return Commands.defer(() -> {
-  //     m_slideExtended = !m_slideExtended;
-
-  //     if (m_slideExtended) {
-  //       return this.run(this::extendSlide)
-  //           .until(() -> getSlidePosition() <= SLIDE_TRAVEL_MAX_POS)
-  //           .andThen(this.runOnce(this::stopSlide));
-  //     } else {
-  //       return this.run(this::retractSlide)
-  //           .until(() -> getSlidePosition() >= SLIDE_TRAVEL_MIN_POS)
-  //           .andThen(this.runOnce(this::stopSlide));
-  //     }
-  //   }, Set.of(this)).withName("SlideToggle");
-  // }
-
-  public void slideCL(double pos) {
-    m_slidePID.setGoal(pos);
-    double ff = m_slideFF.calculate(m_slidePID.getSetpoint().velocity);
-    double pid = (m_slidePID.calculate(m_slideEncoder.getPosition()) / SLIDE_MOTOR_MAX_RPM) * 12;
-    SmartDashboard.putNumber("pidf out", pid + ff);
-    m_slideMotor.setVoltage(pid + ff);
+  public Command autoExtendSlide() {
+    return this.run(this::extendSlide)
+            .until(() -> getSlidePosition() <= SLIDE_TRAVEL_MAX_POS)
+            .andThen(this.runOnce(this::stopSlide));
   }
 
-  /**
-   * Index 0 = min
-   * Index 1 = retract
-   * Index 2 = max
-   * @return
-   */
-  public double[] getPositionSetpoints() {
-    return new double[] {
-      SLIDE_TRAVEL_MIN_POS,
-      SLIDE_TRAVEL_RETRACT_POS,
-      SLIDE_TRAVEL_MAX_POS
-    };
+  public Command slideCommand() {
+    return Commands.defer(() -> {
+      m_slideExtended = !m_slideExtended;
+
+      if (m_slideExtended) {
+        return this.run(this::extendSlide)
+            .until(() -> getSlidePosition() <= SLIDE_TRAVEL_MAX_POS)
+            .andThen(this.runOnce(this::stopSlide));
+      } else {
+        return this.run(this::retractSlide)
+            .until(() -> getSlidePosition() >= SLIDE_TRAVEL_MIN_POS)
+            .andThen(this.runOnce(this::stopSlide));
+      }
+    }, Set.of(this)).withName("SlideToggle");
   }
-
-
 
   @Override
   public void periodic() {

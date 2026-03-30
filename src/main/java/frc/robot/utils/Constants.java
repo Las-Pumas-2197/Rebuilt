@@ -187,8 +187,8 @@ public final class Constants {
         .loadField(AprilTagFields.k2026RebuiltAndymark);
 
     // Standard deviations for pose estimation
-    public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(0.5, 0.5, Double.MAX_VALUE);
-    public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.05, 0.05, Double.MAX_VALUE);
+    public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(0.5, 0.5, 0.5);
+    public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.05, 0.05, 0.05);
     public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(
         Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
 
