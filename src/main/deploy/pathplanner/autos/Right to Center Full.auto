@@ -21,6 +21,12 @@
           "data": {
             "pathName": "Right to Center Full Follow Up"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
+          }
         }
       ]
     }

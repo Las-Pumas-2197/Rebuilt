@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 
@@ -76,6 +77,18 @@ public class RobotContainer {
         // Configure pathfinding
         Pathfinding.setPathfinder(new LocalADStar());
         m_swerve.runAutoBuilder();
+
+        // Register PathPlanner named commands
+        NamedCommands.registerCommand("Shoot", new ParallelCommandGroup(
+            turretTrackHubCommand(),
+            runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder)
+        ));
+        NamedCommands.registerCommand("ExtendHopper",
+            runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[2]));
+        NamedCommands.registerCommand("RetractHopper",
+            runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[1]));
+        NamedCommands.registerCommand("RunIntake",
+            runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
 
         // Configure autos
         // m_autochooser.setDefaultOption("square", Autos.simpleSquareAuto(m_swerve, m_turret));
