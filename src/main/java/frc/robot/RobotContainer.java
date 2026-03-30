@@ -105,6 +105,9 @@ public class RobotContainer {
             this::shakeCommand,
             () -> turretTargetVel = 0.62,
             () -> turretTargetVel = 0));
+
+        m_autochooser.addOption("Right to Center to Bump", AutoBuilder.buildAuto("Right to Bump"));
+
         // m_autochooser.setDefaultOption("drive under tag 28", Autos.driveUnderTagAuto(m_swerve, 28));
         // m_autochooser.addOption("autoalign reef A", Autos.autoAlignReef(m_swerve, 18));
         SmartDashboard.putData(m_autochooser);
