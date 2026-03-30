@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -86,5 +87,14 @@ public class Telemetry extends SubsystemBase {
 
     // misc testing stuff
     SmartDashboard.putBoolean("RR camera has estimate", m_photon.getCameras().get(0).getEstimate().getFirst().isPresent());
+
+    // Publish each camera's field pose
+    Pose2d robotPose = m_swerve.getPose();
+    Pose3d robotPose3d = new Pose3d(robotPose);
+    for (int i = 0; i < k_cameraintrinsics.size(); i++) {
+      Pose2d camPose = robotPose3d.transformBy(k_cameraintrinsics.get(i)).toPose2d();
+      SmartDashboard.putNumberArray("Vision/" + k_cameranames.get(i) + "/Pose",
+          new double[] { camPose.getX(), camPose.getY(), camPose.getRotation().getDegrees() });
+    }
   }
 }
