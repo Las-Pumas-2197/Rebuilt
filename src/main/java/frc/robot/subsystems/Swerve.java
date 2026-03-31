@@ -40,6 +40,8 @@ public class Swerve extends SubsystemBase {
   private final SwerveDrive m_swervedrive;
   private final RobotConfig m_PPconfig;
 
+  private int num_visionmeasurements = 0;
+
   public Swerve() {
 
     // attempt construction of YAGSL swerve object
@@ -98,6 +100,10 @@ public class Swerve extends SubsystemBase {
     );
   }
 
+  public void resetGyro() {
+    m_swervedrive.zeroGyro();
+  }
+
   /** Returns the current swerve drive instance. */
   public Field2d getField2d() {
     return m_swervedrive.field;
@@ -117,10 +123,31 @@ public class Swerve extends SubsystemBase {
     m_swervedrive.driveFieldOriented(speeds);
   }
 
+  /**
+   * Robot-relative driving method.
+   *
+   * @param speeds Composed robot-relative speeds.
+   */
+  public void driveRobotRelative(ChassisSpeeds speeds) {
+    m_swervedrive.drive(speeds, false, new Translation2d());
+  }
+
   /** Returns the current pose of the robot. */
   public Pose2d getPose() {
     return m_swervedrive.getPose();
   }
+
+    /**
+   * Returns the sim factory pose. Use only in simulation to update the vision sim
+   * factory.
+   */
+  // public Pose2d getSimPose() {
+  //   if (m_swervedrive.getSimulationDriveTrainPose().isPresent()) {
+  //     return m_swervedrive.getSimulationDriveTrainPose().get();
+  //   } else {
+  //     return new Pose2d();
+  //   }
+  // }
 
   public Rotation2d getGyroHeading() {
     return m_swervedrive.getYaw();
@@ -131,7 +158,7 @@ public class Swerve extends SubsystemBase {
     for (var estimate : estimates) {
       estimate.getFirst().ifPresent(est -> {
         m_swervedrive.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, estimate.getSecond());
-        SmartDashboard.putNumber("data", est.targetsUsed.size());
+        num_visionmeasurements++;
       });
     }
   }
@@ -184,5 +211,6 @@ public class Swerve extends SubsystemBase {
   public void periodic() {
     m_swervedrive.updateOdometry();
     // m_swervedrive.field.setRobotPose(m_swervedrive.getPose());
+    SmartDashboard.putNumber("number of vision measurements added", num_visionmeasurements);
   }
 }

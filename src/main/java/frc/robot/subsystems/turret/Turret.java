@@ -11,7 +11,6 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -61,7 +60,7 @@ public class Turret extends SubsystemBase {
   private static final double TURRET_GEAR_RATIO = 10.0;
 
   // PID constants for rotation
-  private static final double ROTATION_KP = 3;
+  private static final double ROTATION_KP = 2;
   private static final double ROTATION_KI = 0.0;
   private static final double ROTATION_KD = 0.1;
   private static final double ROTATION_KS = 0.2;
@@ -69,7 +68,7 @@ public class Turret extends SubsystemBase {
 
   // Flywheel speed calibration — two tested (distance, motor speed) pairs
   private static final double CALIB_DIST_CLOSE  = 2.0;   // close test distance (m)
-  private static final double CALIB_SPEED_CLOSE = 0.35;  // motor speed that scored at close distance
+  private static final double CALIB_SPEED_CLOSE = 0.4;  // motor speed that scored at close distance
   private static final double CALIB_DIST_FAR    = 5.0;   // far test distance (m)
   private static final double CALIB_SPEED_FAR   = 0.7;   // motor speed that scored at far distance
   private static final double FLYWHEEL_MIN_SPEED = 0.3;  // minimum flywheel output
@@ -111,6 +110,7 @@ public class Turret extends SubsystemBase {
     rotationConfig.idleMode(IdleMode.kBrake);
     rotationConfig.smartCurrentLimit(ROTATION_CURRENT_LIMIT);
     rotationConfig.inverted(true);
+    
     // Convert encoder position to turret radians directly
     rotationConfig.encoder.positionConversionFactor((2 * Math.PI) / TURRET_GEAR_RATIO);
     m_rotationMotor.configure(rotationConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -242,15 +242,36 @@ public class Turret extends SubsystemBase {
       ChassisSpeeds fieldRelativeSpeeds,
       double exitVelocity,
       double launchAngle) {
+    return calculateLeadCorrectedAngle(
+        robotPose, targetPose, fieldRelativeSpeeds,
+        exitVelocity * Math.cos(launchAngle));
+  }
+
+  /**
+   * Calculates a lead-corrected aim angle using iterative convergence.
+   * Uses average ball speed to estimate time of flight — no need for
+   * exit velocity or launch angle since flywheel speed is already
+   * calibrated to reach the target at a given distance.
+   *
+   * @param robotPose           Current robot pose
+   * @param targetPose          Field pose of the target
+   * @param fieldRelativeSpeeds Field-relative chassis speeds
+   * @param avgBallSpeed        Average horizontal ball speed (m/s) — tune this single constant
+   * @return Lead-corrected turret yaw angle relative to robot heading (rad)
+   */
+  public double calculateLeadCorrectedAngle(
+      Pose2d robotPose,
+      Pose2d targetPose,
+      ChassisSpeeds fieldRelativeSpeeds,
+      double avgBallSpeed) {
 
     Translation2d robotPos  = robotPose.getTranslation();
     Translation2d targetPos = targetPose.getTranslation();
-    double horizontalVelocity = exitVelocity * Math.cos(launchAngle);
 
     Translation2d adjustedTarget = targetPos;
     for (int i = 0; i < 3; i++) {
       double distance     = robotPos.getDistance(adjustedTarget);
-      double timeOfFlight = distance / horizontalVelocity;
+      double timeOfFlight = distance / avgBallSpeed;
       double driftX = fieldRelativeSpeeds.vxMetersPerSecond * timeOfFlight;
       double driftY = fieldRelativeSpeeds.vyMetersPerSecond * timeOfFlight;
       adjustedTarget = new Translation2d(
@@ -296,18 +317,31 @@ public class Turret extends SubsystemBase {
     SmartDashboard.putNumber("Turret/DistanceToTarget", distance);
   }
 
+
   public void turretCL(double vel, double pos) {
     m_rotationPID.setGoal(clampYaw(pos)); 
     double turretPIDout = (m_rotationPID.calculate(m_currentYaw) / (2*Math.PI)) * 12;
     double turretFFout = m_rotationFF.calculate(m_rotationPID.getSetpoint().velocity);
-    SmartDashboard.putNumber("turret FF out", turretFFout);
-    SmartDashboard.putNumber("turret PID out", turretPIDout);
-    SmartDashboard.putNumber("turret vel", vel);
-    m_rotationMotor.setVoltage(turretFFout + turretPIDout);
+    // SmartDashboard.putNumber("turret FF out", turretFFout);
+    // SmartDashboard.putNumber("turret PID out", turretPIDout);
+    // SmartDashboard.putNumber("turret vel", vel);
 
+    m_rotationMotor.setVoltage(turretFFout + turretPIDout);
     m_flywheelLeft.setVoltage(vel * 12);
     m_flywheelRight.setVoltage(vel * 12);
   }
+
+
+
+
+
+
+
+
+
+
+
+
 
   // ===== Combined Operations =====
 

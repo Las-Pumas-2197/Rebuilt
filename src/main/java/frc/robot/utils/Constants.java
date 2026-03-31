@@ -4,6 +4,8 @@
 
 package frc.robot.utils;
 
+import static frc.robot.utils.Constants.SwerveDriveConstants.k_maxlinspeed;
+
 import java.util.List;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -66,9 +68,9 @@ public final class Constants {
    * SDS MK5i swerve module constants (with NEO Vortex motors).
    */
   public static final class ModuleConstants {
-    // Gear ratios (MK5i L2)
-    public static final double kDrivingMotorReduction = 6.75;
-    public static final double kTurningMotorReduction = 150.0 / 7.0; // ~21.43:1
+    // Gear ratios (MK5i R3)
+    public static final double kDrivingMotorReduction = 5.27;
+    public static final double kTurningMotorReduction = 26;
 
     // Wheel specifications
     public static final double kWheelDiameterInches = 4.0;
@@ -87,7 +89,7 @@ public final class Constants {
 
     // Current limits
     public static final int kDriveCurrentLimit = 60;
-    public static final int kTurnCurrentLimit = 30;
+    public static final int kTurnCurrentLimit = 40;
 
     // Encoder offsets
     public static final double kFrontLeftEncoderOffset = 0.0;
@@ -139,8 +141,9 @@ public final class Constants {
    */
   public static final class OIConstants {
     public static final int k_joystickport = 0;
-    public static final double k_maxlinspeedteleop = 5.0; // m/s
+    public static final double k_maxlinspeedteleop = 4.0; // m/s
     public static final double k_maxrotspeedteleop = 2 * Math.PI; // rad/s
+    public static final double k_maxlinspeedturbo = k_maxlinspeed;
   }
 
   /**
@@ -163,12 +166,12 @@ public final class Constants {
             Units.inchesToMeters(-9.75),
             Units.inchesToMeters(14.75),
             Units.inchesToMeters(6.5),
-            new Rotation3d(0, Units.degreesToRadians(-30), Units.degreesToRadians(135))),
+            new Rotation3d(0, Units.degreesToRadians(-20), Units.degreesToRadians(135))),
         new Transform3d(
             Units.inchesToMeters(-9.75),
             Units.inchesToMeters(-14.75),
             Units.inchesToMeters(6.5),
-            new Rotation3d(0, Units.degreesToRadians(-30), Units.degreesToRadians(-135)))
+            new Rotation3d(0, Units.degreesToRadians(-20), Units.degreesToRadians(-135)))
     );
 
     // Camera names
@@ -184,8 +187,8 @@ public final class Constants {
         .loadField(AprilTagFields.k2026RebuiltAndymark);
 
     // Standard deviations for pose estimation
-    public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(0.015, 0.015, 0.015);
-    public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.00, 0.00, 0.00);
+    public static final Matrix<N3, N1> k_singletagstddevs = VecBuilder.fill(0.5, 0.5, Double.MAX_VALUE);
+    public static final Matrix<N3, N1> k_multitagstddevs = VecBuilder.fill(0.05, 0.05, Double.MAX_VALUE);
     public static final Matrix<N3, N1> k_ignorestddevs = VecBuilder.fill(
         Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
 
@@ -216,8 +219,16 @@ public final class Constants {
     public static final Pose2d k_bluereefA = new Pose2d(1, 4, new Rotation2d(Units.degreesToRadians(0)));
     public static final Pose2d k_redreefA = new Pose2d(16, 4, new Rotation2d(Units.degreesToRadians(0)));
     public static final Pose2d k_fieldCenter = new Pose2d(8.27, 4.0, new Rotation2d(0));
-    public static final Pose2d k_basinCenter = new Pose2d(4.5, 4.0, new Rotation2d(0));
-    public static final Pose2d k_redBasinCenter = new Pose2d(16.54 - 4.5, 4.0, new Rotation2d(0));
+    public static final Pose2d k_basinCenter = new Pose2d(4.6, 4.0, new Rotation2d(0));
+    public static final Pose2d k_redBasinCenter = new Pose2d(11.9, 4.0, new Rotation2d(0));
+
+    // Pass-back target positions and midfield thresholds
+    public static final double k_blueMidfieldX = 5.5;
+    public static final double k_redMidfieldX = 10.75;
+    public static final Pose2d k_bluePassBackUpper = new Pose2d(0.5, 7.5, new Rotation2d(0));
+    public static final Pose2d k_bluePassBackLower = new Pose2d(0.5, 0.5, new Rotation2d(0));
+    public static final Pose2d k_redPassBackUpper = new Pose2d(15.5, 7.5, new Rotation2d(0));
+    public static final Pose2d k_redPassBackLower = new Pose2d(15.5, 0.5, new Rotation2d(0));
 
     // Simple square auto waypoints
     public static final Pose2d k_squarePoint1 = new Pose2d(1.5, 1, new Rotation2d(0));

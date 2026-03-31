@@ -1,129 +1,143 @@
 package frc.robot.commands;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
-import static frc.robot.utils.Constants.PathfindingConstants.k_basinCenter;
-import static frc.robot.utils.Constants.VisionConstants.k_fieldlayout;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import frc.robot.subsystems.Swerve;
-import frc.robot.subsystems.turret.Turret;
 
 /**
- * Factory class for teleop cycling commands.
+ * Factory class for teleop tunnel cycling commands.
+ *
+ * Each cycle command drives the robot backwards through a tunnel,
+ * alternating between a waypoint on each side. The robot heading
+ * always faces away from the direction of travel (driving in reverse).
  */
 public final class CycleCommands {
 
     private CycleCommands() {}
 
-    // Tunnel tag pairs: each tunnel has a tag on each end
-    // North tunnel: 22 <-> 23, South tunnel: 28 <-> 17
-    private static final Map<Integer, Integer> TUNNEL_PAIRS = Map.of(
-        22, 23,
-        23, 22,
-        28, 17,
-        17, 28
-    );
+    // ===== Blue Alliance Waypoints =====
 
-    // Final positions after exiting each tunnel tag
-    private static final Map<Integer, Pose2d> TUNNEL_EXIT_POSITIONS = Map.of(
-        17, new Pose2d(8, 1, Rotation2d.fromDegrees(90)),
-        28, new Pose2d(1.5, 1, Rotation2d.fromDegrees(180)),
-        22, new Pose2d(8, 7, Rotation2d.fromDegrees(270)),
-        23, new Pose2d(1.5, 7, Rotation2d.fromDegrees(180))
-    );
+    // Left tunnel (blue side)
+    private static final Pose2d BLUE_LEFT_NEAR = new Pose2d(3.0, 7.4, Rotation2d.fromDegrees(0));  
+    private static final Pose2d BLUE_LEFT_FAR  = new Pose2d(7.0, 7.4, Rotation2d.fromDegrees(180));
 
-    // Fixed orientations when passing through each tunnel exit waypoint (facing 180° from travel)
-    private static final Map<Integer, Rotation2d> TUNNEL_WAYPOINT_ORIENTATIONS = Map.of(
-        17, Rotation2d.fromDegrees(270),  // Exiting south tunnel eastward, face west
-        28, Rotation2d.fromDegrees(90),   // Exiting south tunnel westward, face east
-        22, Rotation2d.fromDegrees(90),   // Exiting north tunnel eastward, face west
-        23, Rotation2d.fromDegrees(270)   // Exiting north tunnel westward, face east
-    );
+    // Right tunnel (blue side)
+    private static final Pose2d BLUE_RIGHT_NEAR = new Pose2d(3.0, 0.5, Rotation2d.fromDegrees(0)); 
+    private static final Pose2d BLUE_RIGHT_FAR  = new Pose2d(7.0, 0.5, Rotation2d.fromDegrees(180));
+
+    // ===== Red Alliance Waypoints =====
+
+    // Left tunnel (red side)
+    private static final Pose2d RED_LEFT_NEAR = new Pose2d(13.25, 0.5, Rotation2d.fromDegrees(180));
+    private static final Pose2d RED_LEFT_FAR  = new Pose2d(9.5, 0.5, Rotation2d.fromDegrees(0));   
+
+    // Right tunnel (red side)
+    private static final Pose2d RED_RIGHT_NEAR = new Pose2d(13.25, 7.4, Rotation2d.fromDegrees(180));
+    private static final Pose2d RED_RIGHT_FAR  = new Pose2d(9.5, 7.4, Rotation2d.fromDegrees(0));  
 
     /**
-     * Creates a command that crosses through the closest tunnel to the other side.
-     * Passes through the tunnel without stopping, then continues to final position.
-     * Turret tracks targets throughout the pathfinding sequence.
-     * Cancels if any manual drive input is detected.
-     *
-     * @param swerve The swerve subsystem
-     * @param turret The turret subsystem
-     * @param cancelCondition Supplier that returns true when the command should cancel
+     * Creates a cycle command for the left tunnel.
+     * Robot drives backwards from near waypoint through tunnel to far waypoint, then back.
+     * Loops until cancelled or cancelCondition is true.
      */
-    public static Command createCycleCommand(Swerve swerve, Turret turret, BooleanSupplier cancelCondition) {
+    public static Command leftTunnelCycle(Swerve swerve, BooleanSupplier cancelCondition) {
         return defer(() -> {
-            Pose2d currentPose = swerve.getPose();
-
-            // Find the closest tunnel entrance (closest tag)
-            int closestTag = -1;
-            double closestDist = Double.MAX_VALUE;
-
-            for (int tagId : TUNNEL_PAIRS.keySet()) {
-                var tagPose = k_fieldlayout.getTagPose(tagId);
-                if (tagPose.isPresent()) {
-                    double dist = currentPose.getTranslation().getDistance(tagPose.get().toPose2d().getTranslation());
-                    if (dist < closestDist) {
-                        closestDist = dist;
-                        closestTag = tagId;
-                    }
-                }
-            }
-
-            if (closestTag == -1) {
-                return print("ERROR: Could not find any tunnel tags");
-            }
-
-            // Get the exit tag on the other side of this tunnel
-            int exitTag = TUNNEL_PAIRS.get(closestTag);
-            Pose2d exitWaypoint = getTagWaypoint(exitTag);
-            Pose2d finalPosition = TUNNEL_EXIT_POSITIONS.get(exitTag);
-
-            if (exitWaypoint == null || finalPosition == null) {
-                return print("ERROR: Could not find exit tag " + exitTag);
-            }
-
-            // Use fixed orientation for waypoint
-            Rotation2d waypointOrientation = TUNNEL_WAYPOINT_ORIENTATIONS.get(exitTag);
-            Pose2d orientedWaypoint = new Pose2d(exitWaypoint.getTranslation(), waypointOrientation);
-
-            // Cross through tunnel at high speed without stopping, then continue to final position
-            Command pathfindSequence = sequence(
-                swerve.pathfindToPose(orientedWaypoint, true, 4.0),
-                swerve.pathfindToPose(finalPosition, true, 1.0)
-            );
-
-            // Turret tracking with lead correction runs in parallel with pathfinding
-            Command turretTrackingCommand = run(() -> {
-                turret.aimAtFieldPoseWithLead(
-                    swerve.getPose(),
-                    k_basinCenter,
-                    swerve.getFieldSpeeds()
-                );
-            });
-
-            // Cancel sequence if manual drive input detected
-            return new ParallelDeadlineGroup(pathfindSequence, turretTrackingCommand)
-                .until(cancelCondition);
-        }, Set.of(swerve));
+            boolean isRed = isRedAlliance();
+            Pose2d near = isRed ? RED_LEFT_NEAR : BLUE_LEFT_NEAR;
+            Pose2d far  = isRed ? RED_LEFT_FAR  : BLUE_LEFT_FAR;
+            return buildCycle(swerve, near, far, isRed);
+        }, Set.of(swerve)).until(cancelCondition);
     }
 
-    /** Gets a waypoint pose at the tag's location with zero rotation. */
-    private static Pose2d getTagWaypoint(int tagId) {
-        var tagPose = k_fieldlayout.getTagPose(tagId);
-        if (tagPose.isEmpty()) {
-            return null;
+    /**
+     * Creates a cycle command for the right tunnel.
+     * Determines which end is closer, aligns, drives to it, then crosses. Runs once.
+     * Cancels if cancelCondition is true.
+     */
+    public static Command rightTunnelCycle(Swerve swerve, BooleanSupplier cancelCondition) {
+        return defer(() -> {
+            boolean isRed = isRedAlliance();
+            Pose2d near = isRed ? RED_RIGHT_NEAR : BLUE_RIGHT_NEAR;
+            Pose2d far  = isRed ? RED_RIGHT_FAR  : BLUE_RIGHT_FAR;
+            return buildCycle(swerve, near, far, isRed);
+        }, Set.of(swerve)).until(cancelCondition);
+    }
+
+    /**
+     * Determines which waypoint is closer, aligns to the crossing orientation,
+     * drives to the closest waypoint, then crosses to the other.
+     *
+     * Red: near->far = 180°, far->near = 0°
+     * Blue: near->far = 0°, far->near = 180°
+     */
+    private static final double SKIP_WAYPOINT_DIST = 1.5; // meters
+
+    private static Command buildCycle(Swerve swerve, Pose2d near, Pose2d far, boolean isRed) {
+        Pose2d robotPose = swerve.getPose();
+        double distToNear = robotPose.getTranslation().getDistance(near.getTranslation());
+        double distToFar = robotPose.getTranslation().getDistance(far.getTranslation());
+
+        if (distToNear <= distToFar) {
+            // Closer to near, will cross near -> far
+            Rotation2d heading = Rotation2d.fromDegrees(isRed ? 180 : 0);
+            if (distToNear < SKIP_WAYPOINT_DIST) {
+                // Already at near, just align and cross
+                return sequence(
+                    alignToHeading(swerve, heading),
+                    swerve.pathfindToPose(new Pose2d(far.getTranslation(), heading), false, 0.0)
+                );
+            }
+            // Pathfind to near with correct heading (aligns while driving), then cross
+            return sequence(
+                swerve.pathfindToPose(new Pose2d(near.getTranslation(), heading), false, 1.0),
+                swerve.pathfindToPose(new Pose2d(far.getTranslation(), heading), false, 0.0)
+            );
+        } else {
+            // Closer to far, will cross far -> near
+            Rotation2d heading = Rotation2d.fromDegrees(isRed ? 0 : 180);
+            if (distToFar < SKIP_WAYPOINT_DIST) {
+                // Already at far, just align and cross
+                return sequence(
+                    alignToHeading(swerve, heading),
+                    swerve.pathfindToPose(new Pose2d(near.getTranslation(), heading), false, 0.0)
+                );
+            }
+            // Pathfind to far with correct heading (aligns while driving), then cross
+            return sequence(
+                swerve.pathfindToPose(new Pose2d(far.getTranslation(), heading), false, 1.0),
+                swerve.pathfindToPose(new Pose2d(near.getTranslation(), heading), false, 0.0)
+            );
         }
-        return new Pose2d(
-            tagPose.get().getX(),
-            tagPose.get().getY(),
-            new Rotation2d(0)
-        );
+    }
+
+    private static final double ALIGN_TOLERANCE = Math.toRadians(5);
+    private static final double ALIGN_KP = 2.0;
+
+    /** Rotates the robot in place to the target heading using proportional control. */
+    private static Command alignToHeading(Swerve swerve, Rotation2d targetHeading) {
+        return run(() -> {
+            double error = MathUtil.angleModulus(
+                targetHeading.getRadians() - swerve.getGyroHeading().getRadians());
+            double rotSpeed = ALIGN_KP * error;
+            swerve.drive(new ChassisSpeeds(0, 0, rotSpeed));
+        }, swerve).until(() -> {
+            double error = MathUtil.angleModulus(
+                targetHeading.getRadians() - swerve.getGyroHeading().getRadians());
+            return Math.abs(error) < ALIGN_TOLERANCE;
+        }).withTimeout(3);
+    }
+
+    private static boolean isRedAlliance() {
+        var alliance = DriverStation.getAlliance();
+        return alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
     }
 }
