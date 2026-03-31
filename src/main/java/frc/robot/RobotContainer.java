@@ -87,11 +87,8 @@ public class RobotContainer {
                 runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder)
             ), Set.of(m_turret, m_feeder)));
 
-        NamedCommands.registerCommand("ExtendHopper", defer(() ->
-            sequence(
-                runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[2]),
-                runEnd(() -> m_intake.runEject(), () -> m_intake.stopRoller(), m_intake)
-            ), Set.of(m_intake)));
+        NamedCommands.registerCommand("ExtendHopper",
+            runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[2]));
         NamedCommands.registerCommand("RetractHopper",
             runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[1]));
         NamedCommands.registerCommand("RunIntake",
@@ -138,7 +135,6 @@ public class RobotContainer {
 
     private void configureBindings() {
         m_joystick.back().onTrue(runOnce(() -> m_swerve.getCurrentCommand().cancel()));
-        // m_joystick.a().onTrue(CycleCommands.createCycleCommand(m_swerve, m_turret, this::hasManualDriveInput));
 
         // hopper slide bindings
         m_joystick3.button(11).whileTrue(runEnd(() -> m_hopper.extendSlide(), () -> m_hopper.stopSlide(), m_hopper));
@@ -146,14 +142,14 @@ public class RobotContainer {
 
         // intake roller
         m_joystick.rightTrigger().whileTrue(runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
-        m_joystick.a().whileTrue(runEnd(() -> m_intake.runEject(), () -> m_intake.stopRoller(), m_intake));
+        // m_joystick.a().whileTrue(runEnd(() -> m_intake.runEject(), () -> m_intake.stopRoller(), m_intake));
 
         // fuel tracking — drive toward detected balls
         // m_joystick.leftTrigger().whileTrue(new FuelTrackCommand(m_swerve));
 
         // cycle
-        m_joystick.povLeft().onTrue(CycleCommands.leftTunnelCycle(m_swerve, this::hasManualDriveInput));
-        m_joystick.povRight().onTrue(CycleCommands.rightTunnelCycle(m_swerve, this::hasManualDriveInput));
+        m_joystick.a().onTrue(CycleCommands.leftTunnelCycle(m_swerve, this::hasManualDriveInput));
+        m_joystick.b().onTrue(CycleCommands.rightTunnelCycle(m_swerve, this::hasManualDriveInput));
 
         m_joystick.leftTrigger().whileTrue(run(() -> m_swerve.driveRobotRelative(
             new ChassisSpeeds(
