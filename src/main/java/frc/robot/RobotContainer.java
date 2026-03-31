@@ -29,6 +29,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
+import java.util.Set;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.pathfinding.LocalADStar;
@@ -79,10 +81,11 @@ public class RobotContainer {
         m_swerve.runAutoBuilder();
 
         // Register PathPlanner named commands
-        NamedCommands.registerCommand("Shoot", new ParallelCommandGroup(
-            turretTrackHubCommand(),
-            runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder)
-        ));
+        NamedCommands.registerCommand("Shoot", defer(() ->
+            new ParallelCommandGroup(
+                turretTrackHubCommand(),
+                runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder)
+            ), Set.of(m_turret, m_feeder)));
         NamedCommands.registerCommand("ExtendHopper",
             runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[2]));
         NamedCommands.registerCommand("RetractHopper",
@@ -107,6 +110,8 @@ public class RobotContainer {
             () -> turretTargetVel = 0));
 
         m_autochooser.addOption("Right to Center to Bump", AutoBuilder.buildAuto("Right to Bump"));
+        m_autochooser.addOption("Simtest", AutoBuilder.buildAuto("SimTest"));
+
 
         // m_autochooser.setDefaultOption("drive under tag 28", Autos.driveUnderTagAuto(m_swerve, 28));
         // m_autochooser.addOption("autoalign reef A", Autos.autoAlignReef(m_swerve, 18));
