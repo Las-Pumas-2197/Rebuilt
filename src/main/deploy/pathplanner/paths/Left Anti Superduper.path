@@ -4,44 +4,60 @@
     {
       "anchor": {
         "x": 4.5,
-        "y": 0.65
+        "y": 7.4
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.188871969487463,
-        "y": 0.6753459162979345
+        "x": 8.852096643518518,
+        "y": 7.671923032407408
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 8.06562609467183,
-        "y": 3.233599280973451
+        "x": 8.237850839120371,
+        "y": 4.306561993634259
       },
       "prevControl": {
-        "x": 8.098797351624167,
-        "y": 0.5199447492575895
+        "x": 8.197505707869928,
+        "y": 5.305747797368665
       },
       "nextControl": {
-        "x": 8.044462343289087,
-        "y": 4.964950912610619
+        "x": 8.398202980324074,
+        "y": 0.3352876880787039
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.931719326143068,
-        "y": 3.9607439735435097
+        "x": 5.820890046296297,
+        "y": 1.5425214843750008
       },
       "prevControl": {
-        "x": 6.9132910752543095,
-        "y": 4.369387798045099
+        "x": 5.858349061477339,
+        "y": 1.158308155865632
       },
       "nextControl": {
-        "x": 7.105053062776549,
-        "y": 0.11709318537979252
+        "x": 5.721030815972223,
+        "y": 2.566767505787037
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 5.820890046296297,
+        "y": 4.702455946180555
+      },
+      "prevControl": {
+        "x": 5.791299696180556,
+        "y": 3.482624927662037
+      },
+      "nextControl": {
+        "x": 5.843126581888497,
+        "y": 5.619133706114452
       },
       "isLocked": false,
       "linkedName": null
@@ -49,11 +65,11 @@
     {
       "anchor": {
         "x": 3.5,
-        "y": 0.75
+        "y": 5.25
       },
       "prevControl": {
-        "x": 6.972579680586284,
-        "y": 0.758153634310471
+        "x": 5.251456235532407,
+        "y": 5.333301215277778
       },
       "nextControl": null,
       "isLocked": false,
@@ -62,39 +78,26 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.6829564144736843,
-      "rotationDegrees": 105.00000000000001
+      "waypointRelativePos": 0.38367598684210535,
+      "rotationDegrees": 10.0
     },
     {
-      "waypointRelativePos": 1.3415141858552628,
-      "rotationDegrees": 100.0
+      "waypointRelativePos": 1.5816200657894737,
+      "rotationDegrees": 10.0
     },
     {
-      "waypointRelativePos": 1.9072522615131575,
-      "rotationDegrees": -90.0
+      "waypointRelativePos": 1.9645148026315782,
+      "rotationDegrees": 90.0
     }
   ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 1.8867809184350133,
-      "maxWaypointRelativePos": 2.2430371352785152,
+      "minWaypointRelativePos": 2.047134551495016,
+      "maxWaypointRelativePos": 3.203799833887045,
       "constraints": {
         "maxVelocity": 1.5,
-        "maxAcceleration": 4.5,
-        "maxAngularVelocity": 720.0,
-        "maxAngularAcceleration": 720.0,
-        "nominalVoltage": 12.0,
-        "unlimited": false
-      }
-    },
-    {
-      "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.7658840351458885,
-      "maxWaypointRelativePos": 1.2288212864721486,
-      "constraints": {
-        "maxVelocity": 1.5,
-        "maxAcceleration": 4.5,
+        "maxAcceleration": 3.5,
         "maxAngularVelocity": 720.0,
         "maxAngularAcceleration": 720.0,
         "nominalVoltage": 12.0,
@@ -106,15 +109,15 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 6.5,
-    "maxAcceleration": 4.5,
+    "maxAcceleration": 3.5,
     "maxAngularVelocity": 720.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0.0,
-    "rotation": -90.0
+    "velocity": 1.0,
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": null,

@@ -68,11 +68,11 @@ public class Turret extends SubsystemBase {
 
   // Flywheel speed calibration — two tested (distance, motor speed) pairs
   private static final double CALIB_DIST_CLOSE  = 2.0;   // close test distance (m)
-  private static final double CALIB_SPEED_CLOSE = 0.4;  // motor speed that scored at close distance
-  private static final double CALIB_DIST_FAR    = 5.0;   // far test distance (m)
-  private static final double CALIB_SPEED_FAR   = 0.7;   // motor speed that scored at far distance
-  private static final double FLYWHEEL_MIN_SPEED = 0.3;  // minimum flywheel output
-  private static final double FLYWHEEL_MAX_SPEED = 0.8;  // maximum flywheel output
+  private static final double CALIB_SPEED_CLOSE = 0.45;  // motor speed that scored at close distance
+  private static final double CALIB_DIST_FAR    = 6.0;   // far test distance (m)
+  private static final double CALIB_SPEED_FAR   = 0.65;   // motor speed that scored at far distance
+  private static final double FLYWHEEL_MIN_SPEED = 0.4;  // minimum flywheel output
+  private static final double FLYWHEEL_MAX_SPEED = 0.7;  // maximum flywheel output
 
   public Turret() {
     // Initialize motors

@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left to Center Quick"
+            "pathName": "Drive Back Center"
           }
         },
         {
@@ -15,9 +15,21 @@
           "data": {
             "commands": [
               {
-                "type": "wait",
+                "type": "path",
                 "data": {
-                  "waitTime": 3.0
+                  "pathName": "Drive Back Depot"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ExtendHopper"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "RunIntake"
                 }
               },
               {
@@ -27,12 +39,6 @@
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Left to Center Bump Follow Up"
           }
         }
       ]

@@ -83,11 +83,15 @@ public class RobotContainer {
         // Register PathPlanner named commands
         NamedCommands.registerCommand("Shoot", defer(() ->
             new ParallelCommandGroup(
-                turretTrackHubCommand(),
+                turretTrackHubLeadCommand(),
                 runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder)
             ), Set.of(m_turret, m_feeder)));
-        NamedCommands.registerCommand("ExtendHopper",
-            runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[2]));
+
+        NamedCommands.registerCommand("ExtendHopper", defer(() ->
+            sequence(
+                runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[2]),
+                runEnd(() -> m_intake.runEject(), () -> m_intake.stopRoller(), m_intake)
+            ), Set.of(m_intake)));
         NamedCommands.registerCommand("RetractHopper",
             runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[1]));
         NamedCommands.registerCommand("RunIntake",
@@ -95,22 +99,28 @@ public class RobotContainer {
 
         // Configure autos
         // m_autochooser.setDefaultOption("square", Autos.simpleSquareAuto(m_swerve, m_turret));
-        m_autochooser.setDefaultOption("center auto",
-            Autos.centerAuto(m_swerve, m_hopper, m_intake, m_feeder,
-            this::turretTrackHubCommand,
-            this::shakeCommand,
-            () -> turretTargetVel = 0.62,
-            () -> turretTargetVel = 0));
+        // m_autochooser.setDefaultOption("center auto",
+        //     Autos.centerAuto(m_swerve, m_hopper, m_intake, m_feeder,
+        //     this::turretTrackHubCommand,
+        //     this::shakeCommand,
+        //     () -> turretTargetVel = 0.62,
+        //     () -> turretTargetVel = 0));
 
-        m_autochooser.addOption("center auto left", 
-            Autos.centerAutoLeft(m_swerve, m_hopper, m_intake, m_feeder,
-            this::turretTrackHubCommand,
-            this::shakeCommand,
-            () -> turretTargetVel = 0.62,
-            () -> turretTargetVel = 0));
+        // m_autochooser.addOption("center auto left", 
+        //     Autos.centerAutoLeft(m_swerve, m_hopper, m_intake, m_feeder,
+        //     this::turretTrackHubCommand,
+        //     this::shakeCommand,
+        //     () -> turretTargetVel = 0.62,
+        //     () -> turretTargetVel = 0));
 
-        m_autochooser.addOption("Right to Center to Bump", AutoBuilder.buildAuto("Right to Bump"));
-        m_autochooser.addOption("Simtest", AutoBuilder.buildAuto("SimTest"));
+        m_autochooser.setDefaultOption("SimTest", AutoBuilder.buildAuto("SimTest"));
+        m_autochooser.addOption("Right to Center to Bump", AutoBuilder.buildAuto("Right to Center to Bump"));
+        m_autochooser.addOption("Left to Center to Depot", AutoBuilder.buildAuto("Left to Center to Depot"));
+        m_autochooser.addOption("Right to Center Full", AutoBuilder.buildAuto("Right to Center Full"));
+        m_autochooser.addOption("Left Anti Superduper", AutoBuilder.buildAuto("Left Anti Superduper"));
+        m_autochooser.addOption("Middle to Depot", AutoBuilder.buildAuto("Middle to Depot"));
+
+        // m_autochooser.addOption("Simtest", AutoBuilder.buildAuto("SimTest"));
 
 
         // m_autochooser.setDefaultOption("drive under tag 28", Autos.driveUnderTagAuto(m_swerve, 28));
@@ -168,7 +178,7 @@ public class RobotContainer {
         // m_joystick2.back().onTrue(runOnce(() -> turretTargetVel = 0));
         new Trigger(() -> this.hasAimInput()).whileTrue(runEnd(() -> turretTargetPos = this.getAimHeading(), () -> turretTargetPos = 0));
 
-        m_joystick3.button(3).toggleOnTrue(turretTrackHubCommand());
+        m_joystick3.button(3).toggleOnTrue(turretTrackHubLeadCommand());
 
         m_joystick.leftBumper().whileTrue(runEnd(() -> drivespeedmult = 1, () -> drivespeedmult = k_maxlinspeedteleop));
         m_joystick.rightBumper().whileTrue(runEnd(() -> drivespeedmult = k_maxlinspeedturbo, () -> drivespeedmult = k_maxlinspeedteleop));
@@ -182,7 +192,10 @@ public class RobotContainer {
         // hopper positions
         // m_joystick3.button(5).onTrue(runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[0]));
         m_joystick3.button(6).onTrue(runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[1]));
-        m_joystick3.button(7).onTrue(runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[2]));
+        m_joystick3.button(7).whileTrue(sequence(
+            runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[2]),
+            runEnd(() -> m_intake.runEject(), () -> m_intake.stopRoller(), m_intake)
+        ));
 
         // turret
         // m_joystick.rightTrigger().whileTrue(runEnd(() -> m_turret.spinUpFlywheels(), () -> m_turret.stopAllShooter(), m_turret));
@@ -267,19 +280,19 @@ public class RobotContainer {
         }, m_turret);
     }
 
-    // private Command turretTrackHubLeadCommand() {
-    //     final double avgBallSpeed = 3.0; // m/s — tune 
-    //     return new RunCommand(() -> {
-    //         Pose2d robotPose = m_swerve.getPose();
-    //         Pose2d targetPose = getTargetPose();
-    //         ChassisSpeeds fieldSpeeds = m_swerve.getFieldSpeeds();
-    //         double distance = robotPose.getTranslation().getDistance(targetPose.getTranslation());
-    //         double flywheelSpeed = m_turret.interpolateFlywheelSpeed(distance);
-    //         double leadAngle = MathUtil.angleModulus(
-    //             m_turret.calculateLeadCorrectedAngle(robotPose, targetPose, fieldSpeeds, avgBallSpeed) + Math.PI);
-    //         m_turret.turretCL(flywheelSpeed, leadAngle);
-    //     }, m_turret);
-    // }
+    private Command turretTrackHubLeadCommand() {
+        final double avgBallSpeed = 3.0; // m/s — tune 
+        return new RunCommand(() -> {
+            Pose2d robotPose = m_swerve.getPose();
+            Pose2d targetPose = getTargetPose();
+            ChassisSpeeds fieldSpeeds = m_swerve.getFieldSpeeds();
+            double distance = robotPose.getTranslation().getDistance(targetPose.getTranslation());
+            double flywheelSpeed = m_turret.interpolateFlywheelSpeed(distance);
+            double leadAngle = MathUtil.angleModulus(
+                m_turret.calculateLeadCorrectedAngle(robotPose, targetPose, fieldSpeeds, avgBallSpeed) + Math.PI);
+            m_turret.turretCL(flywheelSpeed, leadAngle);
+        }, m_turret);
+    }
 
     public Command getAutonomousCommand() {
         return m_autochooser.getSelected();
