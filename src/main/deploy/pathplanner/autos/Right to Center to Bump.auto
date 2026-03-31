@@ -97,9 +97,28 @@
                 }
               },
               {
-                "type": "named",
+                "type": "sequential",
                 "data": {
-                  "name": "RetractHopper"
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "RetractHopper"
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 1.5
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "ExtendHopper"
+                      }
+                    }
+                  ]
                 }
               }
             ]
