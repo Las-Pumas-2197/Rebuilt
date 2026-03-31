@@ -51,7 +51,7 @@ public class RobotContainer {
 
     // Controllers
     private final CommandXboxController m_joystick = new CommandXboxController(k_joystickport);
-    private final CommandXboxController m_joystick2 = new CommandXboxController(1);
+    // private final CommandXboxController m_joystick2 = new CommandXboxController(1);
     private final CommandGenericHID m_joystick3 = new CommandGenericHID(2);
 
     // Subsystems
@@ -119,7 +119,6 @@ public class RobotContainer {
 
         // m_autochooser.addOption("Simtest", AutoBuilder.buildAuto("SimTest"));
 
-
         // m_autochooser.setDefaultOption("drive under tag 28", Autos.driveUnderTagAuto(m_swerve, 28));
         // m_autochooser.addOption("autoalign reef A", Autos.autoAlignReef(m_swerve, 18));
         SmartDashboard.putData(m_autochooser);
@@ -172,9 +171,13 @@ public class RobotContainer {
         m_joystick3.button(8).whileTrue(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder));
         // m_joystick2.start().onTrue(runOnce(() -> turretTargetVel = 0.1));
         // m_joystick2.back().onTrue(runOnce(() -> turretTargetVel = 0));
-        new Trigger(() -> this.hasAimInput()).whileTrue(runEnd(() -> turretTargetPos = this.getAimHeading(), () -> turretTargetPos = 0));
+        // new Trigger(() -> this.hasAimInput()).whileTrue(runEnd(() -> turretTargetPos = this.getAimHeading(), () -> turretTargetPos = 0));
 
         m_joystick3.button(3).toggleOnTrue(turretTrackHubLeadCommand());
+        m_joystick3.button(4).toggleOnTrue(new ParallelCommandGroup(
+            turretTrackHubCommand(),
+            waitSeconds(1).andThen(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder))
+        ));
 
         m_joystick.leftBumper().whileTrue(runEnd(() -> drivespeedmult = 1, () -> drivespeedmult = k_maxlinspeedteleop));
         m_joystick.rightBumper().whileTrue(runEnd(() -> drivespeedmult = k_maxlinspeedturbo, () -> drivespeedmult = k_maxlinspeedteleop));
@@ -186,12 +189,13 @@ public class RobotContainer {
         m_joystick.x().onTrue(runOnce(() -> m_swerve.resetGyro()));
 
         // hopper positions
-        // m_joystick3.button(5).onTrue(runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[0]));
+        m_joystick3.button(5).onTrue(runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[0]));
         m_joystick3.button(6).onTrue(runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[1]));
         m_joystick3.button(7).whileTrue(sequence(
             runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[2]),
             runEnd(() -> m_intake.runEject(), () -> m_intake.stopRoller(), m_intake)
         ));
+
 
         // turret
         // m_joystick.rightTrigger().whileTrue(runEnd(() -> m_turret.spinUpFlywheels(), () -> m_turret.stopAllShooter(), m_turret));
@@ -216,14 +220,14 @@ public class RobotContainer {
             || Math.abs(m_joystick.getRightX()) > deadband;
     }
 
-    private boolean hasAimInput() {
-        return Math.abs(m_joystick2.getLeftY()) > 0.2
-            || Math.abs(m_joystick2.getLeftX()) > 0.2;
-    }
+    // private boolean hasAimInput() {
+    //     return Math.abs(m_joystick2.getLeftY()) > 0.2
+    //         || Math.abs(m_joystick2.getLeftX()) > 0.2;
+    // }
 
-    private double getAimHeading() {
-        return Math.atan2(-m_joystick2.getLeftX(), -m_joystick2.getLeftY());
-    }
+    // private double getAimHeading() {
+    //     return Math.atan2(-m_joystick2.getLeftX(), -m_joystick2.getLeftY());
+    // }
 
     private ParallelCommandGroup visionDefaultCommand() {
         ParallelCommandGroup cmd = new ParallelCommandGroup();

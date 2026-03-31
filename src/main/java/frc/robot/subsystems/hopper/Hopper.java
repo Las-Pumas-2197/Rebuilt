@@ -42,7 +42,7 @@ public class Hopper extends SubsystemBase {
 
   // Robot starts closed @ 0
   private static final double SLIDE_TRAVEL_MAX_POS = -68.75;
-  private static final double SLIDE_TRAVEL_RETRACT_POS = -23;
+  private static final double SLIDE_TRAVEL_RETRACT_POS = -21;
   private static final double SLIDE_TRAVEL_MIN_POS = 0;
 
   public Hopper() {
