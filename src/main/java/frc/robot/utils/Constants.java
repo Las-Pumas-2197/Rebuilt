@@ -221,14 +221,13 @@ public final class Constants {
     public static final Pose2d k_fieldCenter = new Pose2d(8.27, 4.0, new Rotation2d(0));
     public static final Pose2d k_basinCenter = new Pose2d(4.6, 4.0, new Rotation2d(0));
     public static final Pose2d k_redBasinCenter = new Pose2d(11.9, 4.0, new Rotation2d(0));
-
     // Pass-back target positions and midfield thresholds
     public static final double k_blueMidfieldX = 5.5;
     public static final double k_redMidfieldX = 10.75;
-    public static final Pose2d k_bluePassBackUpper = new Pose2d(0.5, 7.5, new Rotation2d(0));
-    public static final Pose2d k_bluePassBackLower = new Pose2d(0.5, 0.5, new Rotation2d(0));
-    public static final Pose2d k_redPassBackUpper = new Pose2d(15.5, 7.5, new Rotation2d(0));
-    public static final Pose2d k_redPassBackLower = new Pose2d(15.5, 0.5, new Rotation2d(0));
+    public static final Pose2d k_bluePassBackUpper = new Pose2d(1.5, 7.0, new Rotation2d(0));
+    public static final Pose2d k_bluePassBackLower = new Pose2d(1.5, 1.0, new Rotation2d(0));
+    public static final Pose2d k_redPassBackUpper = new Pose2d(14.5, 7.0, new Rotation2d(0));
+    public static final Pose2d k_redPassBackLower = new Pose2d(14.5, 1.0, new Rotation2d(0));
 
     // Simple square auto waypoints
     public static final Pose2d k_squarePoint1 = new Pose2d(1.5, 1, new Rotation2d(0));

@@ -33,7 +33,7 @@
                     {
                       "type": "wait",
                       "data": {
-                        "waitTime": 1.5
+                        "waitTime": 1.75
                       }
                     },
                     {
@@ -43,7 +43,7 @@
                           {
                             "type": "wait",
                             "data": {
-                              "waitTime": 3.0
+                              "waitTime": 2.5
                             }
                           },
                           {
@@ -68,7 +68,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.0
+                  "waitTime": 2.5
                 }
               },
               {
@@ -87,7 +87,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Right to Center Full to Bump"
+                  "pathName": "Right to Center Full Follow Up v2"
                 }
               },
               {
@@ -106,7 +106,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.0
+                  "waitTime": 5.0
                 }
               },
               {
@@ -114,24 +114,24 @@
                 "data": {
                   "name": "Shoot"
                 }
-              }
-            ]
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Shoot"
-                }
               },
               {
-                "type": "named",
+                "type": "deadline",
                 "data": {
-                  "name": "RetractHopper"
+                  "commands": [
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 0.75
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "RetractHopper"
+                      }
+                    }
+                  ]
                 }
               }
             ]
