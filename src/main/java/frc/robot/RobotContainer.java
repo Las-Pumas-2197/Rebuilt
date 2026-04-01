@@ -72,6 +72,8 @@ public class RobotContainer {
 
     private double drivespeedmult = 4;
 
+    private boolean turretEnabled = false;
+
     public RobotContainer() {
 
         // start data logging
@@ -173,10 +175,15 @@ public class RobotContainer {
         // m_joystick2.back().onTrue(runOnce(() -> turretTargetVel = 0));
         // new Trigger(() -> this.hasAimInput()).whileTrue(runEnd(() -> turretTargetPos = this.getAimHeading(), () -> turretTargetPos = 0));
 
-        m_joystick3.button(3).toggleOnTrue(turretTrackHubLeadCommand());
+        m_joystick3.button(3).toggleOnTrue(new ParallelCommandGroup(
+            turretTrackHubLeadCommand(),
+            runEnd(() -> turretEnabled = true, () -> turretEnabled = false)
+        ));
         m_joystick3.button(4).toggleOnTrue(new ParallelCommandGroup(
-            turretTrackHubCommand(),
-            waitSeconds(1).andThen(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder))
+            turretTrackHubLeadCommand(),
+            waitSeconds(1).andThen(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder),
+            runEnd(() -> turretEnabled = true, () -> turretEnabled = false)
+)
         ));
 
         m_joystick.leftBumper().whileTrue(runEnd(() -> drivespeedmult = 1, () -> drivespeedmult = k_maxlinspeedteleop));
@@ -186,7 +193,7 @@ public class RobotContainer {
         // Shake robot forward/backward
         // m_joystick.y().whileTrue(shakeCommand());
 
-        m_joystick.x().onTrue(runOnce(() -> m_swerve.resetGyro()));
+        m_joystick.x().whileTrue(runOnce(() -> m_swerve.resetGyro()));
 
         // hopper positions
         m_joystick3.button(5).onTrue(runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[0]));
@@ -281,7 +288,7 @@ public class RobotContainer {
     }
 
     private Command turretTrackHubLeadCommand() {
-        final double avgBallSpeed = 3.0; // m/s — tune 
+        final double avgBallSpeed = 2.5; // m/s — tune
         return new RunCommand(() -> {
             Pose2d robotPose = m_swerve.getPose();
             Pose2d targetPose = getTargetPose();
@@ -325,5 +332,6 @@ public class RobotContainer {
         Pose2d target = getTargetPose();
         SmartDashboard.putNumberArray("Turret Target",
             new double[] { target.getX(), target.getY(), target.getRotation().getDegrees() });
+        SmartDashboard.putBoolean("turret tracking", turretEnabled);
     }
 }

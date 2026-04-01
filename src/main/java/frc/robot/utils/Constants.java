@@ -153,12 +153,12 @@ public final class Constants {
     // Camera transforms (position relative to robot center)
     public static final List<Transform3d> k_cameraintrinsics = List.of(
         new Transform3d(
-            Units.inchesToMeters(15.1875), // X - fwd/bckwd
+            Units.inchesToMeters(26.1875), // X - fwd/bckwd
             Units.inchesToMeters(14.75), // Y - left/right
             Units.inchesToMeters(20), // Z
             new Rotation3d(0, Units.degreesToRadians(0), Units.degreesToRadians(45))),
         new Transform3d(
-            Units.inchesToMeters(15.1875),
+            Units.inchesToMeters(26.1875),
             Units.inchesToMeters(-14.75),
             Units.inchesToMeters(20),
             new Rotation3d(0, Units.degreesToRadians(0), Units.degreesToRadians(-45))),

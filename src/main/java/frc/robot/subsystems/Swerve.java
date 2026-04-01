@@ -22,6 +22,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
@@ -81,8 +82,8 @@ public class Swerve extends SubsystemBase {
         // feedforwards
         new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic
                                         // drive trains
-            new PIDConstants(8, 0.0, 0.0), // Translation PID constants
-            new PIDConstants(8, 0.0, 0.0) // Rotation PID constants
+            new PIDConstants(5, 0.0, 0.0), // Translation PID constants
+            new PIDConstants(5, 0.0, 0.0) // Rotation PID constants
         ),
         m_PPconfig, // The robot configuration
         () -> {
@@ -101,6 +102,7 @@ public class Swerve extends SubsystemBase {
   }
 
   public void resetGyro() {
+    // m_swervedrive.setGyroOffset(new Rotation3d().minus(m_swervedrive.getGyroRotation3d()));
     m_swervedrive.zeroGyro();
   }
 

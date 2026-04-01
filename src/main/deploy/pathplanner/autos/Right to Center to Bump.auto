@@ -110,6 +110,12 @@
           "data": {
             "commands": [
               {
+                "type": "wait",
+                "data": {
+                  "waitTime": 3.3
+                }
+              },
+              {
                 "type": "path",
                 "data": {
                   "pathName": "Right Bump to Trench"
