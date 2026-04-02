@@ -66,7 +66,7 @@ public class Turret extends SubsystemBase {
   private static final double ROTATION_KS = 0.2;
   private static final double ROTATION_KV = 0.1689;
 
-  // Flywheel speed calibration — two tested (distance, motor speed) pairs
+  // Flywheel speed calibration
   private static final double CALIB_DIST_CLOSE  = 2.0;   // close test distance (m)
   private static final double CALIB_SPEED_CLOSE = 0.45;  // motor speed that scored at close distance
   private static final double CALIB_DIST_FAR    = 6.0;   // far test distance (m)
