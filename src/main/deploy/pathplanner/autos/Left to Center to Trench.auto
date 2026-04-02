@@ -11,19 +11,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Right to Center Full"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "ExtendHopper"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "RunIntake"
+                  "pathName": "Left to Center to Trench"
                 }
               },
               {
@@ -33,7 +21,7 @@
                     {
                       "type": "wait",
                       "data": {
-                        "waitTime": 1.75
+                        "waitTime": 2.2
                       }
                     },
                     {
@@ -43,7 +31,7 @@
                           {
                             "type": "wait",
                             "data": {
-                              "waitTime": 2.5
+                              "waitTime": 2.0
                             }
                           },
                           {
@@ -57,6 +45,18 @@
                     }
                   ]
                 }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ExtendHopper"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "RunIntake"
+                }
               }
             ]
           }
@@ -68,7 +68,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 2.5
+                  "waitTime": 3.0
                 }
               },
               {
@@ -87,7 +87,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Right to Center Full Follow Up v1"
+                  "pathName": "Left to Center to Trench Follow Up"
                 }
               },
               {
@@ -116,22 +116,9 @@
                 }
               },
               {
-                "type": "deadline",
+                "type": "named",
                 "data": {
-                  "commands": [
-                    {
-                      "type": "wait",
-                      "data": {
-                        "waitTime": 0.75
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "RetractHopper"
-                      }
-                    }
-                  ]
+                  "name": "StopDrive"
                 }
               }
             ]

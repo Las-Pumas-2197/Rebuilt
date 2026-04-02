@@ -95,6 +95,8 @@ public class RobotContainer {
             runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[1]));
         NamedCommands.registerCommand("RunIntake",
             runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake));
+        NamedCommands.registerCommand("StopDrive",
+            runOnce(() -> m_swerve.drive(new ChassisSpeeds(0, 0, 0)), m_swerve));
 
         // Configure autos
         // m_autochooser.setDefaultOption("square", Autos.simpleSquareAuto(m_swerve, m_turret));
@@ -114,7 +116,9 @@ public class RobotContainer {
 
         m_autochooser.setDefaultOption("SimTest", AutoBuilder.buildAuto("SimTest"));
         m_autochooser.addOption("Right to Center to Bump", AutoBuilder.buildAuto("Right to Center to Bump"));
+        m_autochooser.addOption("Left to Center to Bump", AutoBuilder.buildAuto("Left to Center to Bump"));
         m_autochooser.addOption("Right to Center to Trench", AutoBuilder.buildAuto("Right to Center to Trench"));
+        m_autochooser.addOption("Left to Center to Trench", AutoBuilder.buildAuto("Left to Center to Trench"));
         m_autochooser.addOption("Left Anti Superduper", AutoBuilder.buildAuto("Left Anti Superduper"));
         m_autochooser.addOption("Middle to Depot", AutoBuilder.buildAuto("Middle to Depot"));
         m_autochooser.addOption("Left to Center to Depot", AutoBuilder.buildAuto("Left to Center to Depot"));
