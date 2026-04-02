@@ -121,7 +121,7 @@ public class RobotContainer {
         m_autochooser.addOption("Left to Center to Trench", AutoBuilder.buildAuto("Left to Center to Trench"));
         m_autochooser.addOption("Left Anti Superduper", AutoBuilder.buildAuto("Left Anti Superduper"));
         m_autochooser.addOption("Middle to Depot", AutoBuilder.buildAuto("Middle to Depot"));
-        m_autochooser.addOption("Left to Center to Depot", AutoBuilder.buildAuto("Left to Center to Depot"));
+        // m_autochooser.addOption("Left to Center to Depot", AutoBuilder.buildAuto("Left to Center to Depot"));
 
         // m_autochooser.addOption("Simtest", AutoBuilder.buildAuto("SimTest"));
 
