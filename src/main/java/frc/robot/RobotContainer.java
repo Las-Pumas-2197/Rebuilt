@@ -297,7 +297,7 @@ public class RobotContainer {
             Pose2d robotPose = m_swerve.getPose();
             Pose2d targetPose = getTargetPose();
             ChassisSpeeds fieldSpeeds = m_swerve.getFieldSpeeds();
-            double distance = robotPose.getTranslation().getDistance(targetPose.getTranslation());
+            double distance = m_turret.getTurretFieldPosition(robotPose).getDistance(targetPose.getTranslation());
             double flywheelSpeed = m_turret.interpolateFlywheelSpeed(distance);
             double leadAngle = MathUtil.angleModulus(
                 m_turret.calculateLeadCorrectedAngle(robotPose, targetPose, fieldSpeeds, avgBallSpeed) + Math.PI);
@@ -337,5 +337,8 @@ public class RobotContainer {
         SmartDashboard.putNumberArray("Turret Target",
             new double[] { target.getX(), target.getY(), target.getRotation().getDegrees() });
         SmartDashboard.putBoolean("turret tracking", turretEnabled);
+        var turretPos = m_turret.getTurretFieldPosition(m_swerve.getPose());
+        SmartDashboard.putNumberArray("Turret Position",
+            new double[] { turretPos.getX(), turretPos.getY(), 0 });
     }
 }

@@ -17,6 +17,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -44,6 +45,10 @@ public class Turret extends SubsystemBase {
   private double m_targetYaw = 0.0;
   private double m_currentYaw = 0.0;
 
+  // Turret position relative to robot center (meters)
+  // +X = forward, +Y = left (robot-relative)
+  private static final Translation2d TURRET_OFFSET = new Translation2d(Units.inchesToMeters(-6), Units.inchesToMeters(-7));
+
   // Rotation limits: ±90° from home position (0 = forward)
   private static final double MIN_YAW = -Math.PI / 2;  // -90°
   private static final double MAX_YAW =  Math.PI / 2;  //  +90°
@@ -66,13 +71,18 @@ public class Turret extends SubsystemBase {
   private static final double ROTATION_KS = 0.2;
   private static final double ROTATION_KV = 0.1689;
 
-  // Flywheel speed calibration
+  // Flywheel speed calibration — linear
   private static final double CALIB_DIST_CLOSE  = 2.0;   // close test distance (m)
-  private static final double CALIB_SPEED_CLOSE = 0.5;  // motor speed that scored at close distance
+  private static final double CALIB_SPEED_CLOSE = 0.45;  // motor speed that scored at close distance
   private static final double CALIB_DIST_FAR    = 6.0;   // far test distance (m)
-  private static final double CALIB_SPEED_FAR   = 0.7;   // motor speed that scored at far distance
-  private static final double FLYWHEEL_MIN_SPEED = 0.45;  // minimum flywheel output
-  private static final double FLYWHEEL_MAX_SPEED = 0.8;  // maximum flywheel output
+  private static final double CALIB_SPEED_FAR   = 0.65;   // motor speed that scored at far distance
+  private static final double FLYWHEEL_MIN_SPEED = 0.425;  // minimum flywheel output
+  private static final double FLYWHEEL_MAX_SPEED = 0.7;  // maximum flywheel output
+
+  // Flywheel speed calibration — piecewise linear
+  // Sorted by distance: p1 < p2 < p3 < p4
+  private static final double[] PW_DISTS  = { 1.5,  3.0,  5.0,  7.0  }; // distances (m)
+  private static final double[] PW_SPEEDS = { 0.40, 0.50, 0.62, 0.75 }; // motor speeds
 
   public Turret() {
     // Initialize motors
@@ -211,12 +221,41 @@ public class Turret extends SubsystemBase {
     return Math.max(FLYWHEEL_MIN_SPEED, Math.min(FLYWHEEL_MAX_SPEED, speed));
   }
 
+  /**
+   * Piecewise linear interpolation of flywheel speed from four calibration points.
+   * Extrapolates beyond the calibrated range, clamped to [MIN, MAX].
+   *
+   * @param distance Horizontal distance to target (m)
+   * @return Motor speed (0–1)
+   */
+  public double interpolateFlywheelSpeedPiecewise(double distance) {
+    // Find the segment
+    for (int i = 0; i < PW_DISTS.length - 1; i++) {
+      if (distance <= PW_DISTS[i + 1]) {
+        double t = (distance - PW_DISTS[i]) / (PW_DISTS[i + 1] - PW_DISTS[i]);
+        double speed = PW_SPEEDS[i] + t * (PW_SPEEDS[i + 1] - PW_SPEEDS[i]);
+        return Math.max(FLYWHEEL_MIN_SPEED, Math.min(FLYWHEEL_MAX_SPEED, speed));
+      }
+    }
+    // Beyond last point — extrapolate from last segment
+    int last = PW_DISTS.length - 1;
+    double t = (distance - PW_DISTS[last - 1]) / (PW_DISTS[last] - PW_DISTS[last - 1]);
+    double speed = PW_SPEEDS[last - 1] + t * (PW_SPEEDS[last] - PW_SPEEDS[last - 1]);
+    return Math.max(FLYWHEEL_MIN_SPEED, Math.min(FLYWHEEL_MAX_SPEED, speed));
+  }
+
   // ===== Aiming Methods =====
 
+  /** Returns the turret's field position by rotating the offset by the robot heading. */
+  public Translation2d getTurretFieldPosition(Pose2d robotPose) {
+    return robotPose.getTranslation().plus(TURRET_OFFSET.rotateBy(robotPose.getRotation()));
+  }
+
   public double calculateAngleToFieldPose(Pose2d robotPose, Pose2d targetPose) {
+    Translation2d turretPos = getTurretFieldPosition(robotPose);
     double angleToTarget = Math.atan2(
-        targetPose.getY() - robotPose.getY(),
-        targetPose.getX() - robotPose.getX()
+        targetPose.getY() - turretPos.getY(),
+        targetPose.getX() - turretPos.getX()
     );
     double robotHeading = robotPose.getRotation().getRadians();
     return normalizeAngle(angleToTarget - robotHeading);
@@ -265,7 +304,7 @@ public class Turret extends SubsystemBase {
       ChassisSpeeds fieldRelativeSpeeds,
       double avgBallSpeed) {
 
-    Translation2d robotPos  = robotPose.getTranslation();
+    Translation2d robotPos  = getTurretFieldPosition(robotPose);
     Translation2d targetPos = targetPose.getTranslation();
 
     Translation2d adjustedTarget = targetPos;
