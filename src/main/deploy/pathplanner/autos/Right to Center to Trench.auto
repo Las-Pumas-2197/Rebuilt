@@ -9,15 +9,28 @@
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "wait",
                 "data": {
-                  "pathName": "Right to Center Full"
+                  "waitTime": 0.25
                 }
               },
               {
                 "type": "named",
                 "data": {
                   "name": "ExtendHopper"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Right to Center Full"
                 }
               },
               {
@@ -43,7 +56,7 @@
                           {
                             "type": "wait",
                             "data": {
-                              "waitTime": 2.5
+                              "waitTime": 2.75
                             }
                           },
                           {

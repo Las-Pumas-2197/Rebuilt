@@ -9,15 +9,28 @@
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "wait",
                 "data": {
-                  "pathName": "Left to Center to Bump"
+                  "waitTime": 0.25
                 }
               },
               {
                 "type": "named",
                 "data": {
                   "name": "ExtendHopper"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Left to Center to Bump"
                 }
               },
               {
