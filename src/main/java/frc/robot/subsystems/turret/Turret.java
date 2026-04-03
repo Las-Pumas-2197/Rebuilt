@@ -70,19 +70,23 @@ public class Turret extends SubsystemBase {
   private static final double ROTATION_KD = 0.1;
   private static final double ROTATION_KS = 0.2;
   private static final double ROTATION_KV = 0.1689;
-
+  //179in@0.62
+  // 76in @ 0.42
+  // 108in @ 0.47
+  //143in@0.56
+  //213in@0.72
   // Flywheel speed calibration — linear
   private static final double CALIB_DIST_CLOSE  = 2.0;   // close test distance (m)
   private static final double CALIB_SPEED_CLOSE = 0.45;  // motor speed that scored at close distance
   private static final double CALIB_DIST_FAR    = 6.0;   // far test distance (m)
   private static final double CALIB_SPEED_FAR   = 0.65;   // motor speed that scored at far distance
-  private static final double FLYWHEEL_MIN_SPEED = 0.425;  // minimum flywheel output
-  private static final double FLYWHEEL_MAX_SPEED = 0.7;  // maximum flywheel output
+  private static final double FLYWHEEL_MIN_SPEED = 0.42;  // minimum flywheel output
+  private static final double FLYWHEEL_MAX_SPEED = 0.75;  // maximum flywheel output
 
   // Flywheel speed calibration — piecewise linear
   // Sorted by distance: p1 < p2 < p3 < p4
-  private static final double[] PW_DISTS  = { 1.5,  3.0,  5.0,  7.0  }; // distances (m)
-  private static final double[] PW_SPEEDS = { 0.40, 0.50, 0.62, 0.75 }; // motor speeds
+  private static final double[] PW_DISTS  = { Units.inchesToMeters(76), Units.inchesToMeters(108), Units.inchesToMeters(143), Units.inchesToMeters(179), Units.inchesToMeters(213)  }; // distances (m)
+  private static final double[] PW_SPEEDS = { 0.42, 0.47, 0.56, 0.62, 0.72 }; // motor speeds
 
   public Turret() {
     // Initialize motors

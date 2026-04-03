@@ -46,6 +46,7 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.utils.Telemetry;
+import frc.robot.utils.shiftinfo;
 
 public class RobotContainer {
 
@@ -75,6 +76,7 @@ public class RobotContainer {
 
     private boolean turretEnabled = false;
 
+    // private shiftinfo shiftinformation;
     public RobotContainer() {
 
         // start data logging
@@ -210,13 +212,13 @@ public class RobotContainer {
 
 
         // flywheel speed debug — adjust with pov up/down, shoot with button 9
-        m_joystick.povUp().onTrue(runOnce(() -> debugFlywheelSpeed += 0.01));
-        m_joystick.povDown().onTrue(runOnce(() -> debugFlywheelSpeed -= 0.01));
-        m_joystick3.button(9).whileTrue(new ParallelCommandGroup(
-            runEnd(() -> m_turret.turretCL(debugFlywheelSpeed, 0),
-                () -> m_turret.turretCL(0, 0), m_turret),
-            runEnd(() -> m_feeder.runFeeder(),
-                () -> m_feeder.stopAllFeeder(), m_feeder)));
+        // m_joystick.povUp().onTrue(runOnce(() -> debugFlywheelSpeed += 0.01));
+        // m_joystick.povDown().onTrue(runOnce(() -> debugFlywheelSpeed -= 0.01));
+        // m_joystick3.button(9).whileTrue(new ParallelCommandGroup(
+        //     runEnd(() -> m_turret.turretCL(debugFlywheelSpeed, 0),
+        //         () -> m_turret.turretCL(0, 0), m_turret),
+        //     runEnd(() -> m_feeder.runFeeder(),
+        //         () -> m_feeder.stopAllFeeder(), m_feeder)));
 
         // turret
         // m_joystick.rightTrigger().whileTrue(runEnd(() -> m_turret.spinUpFlywheels(), () -> m_turret.stopAllShooter(), m_turret));
@@ -302,15 +304,15 @@ public class RobotContainer {
     }
 
     private Command turretTrackHubLeadCommand() {
-        final double avgBallSpeed = 2.5; // m/s — tune
+        final double avgBallSpeed = 2.0; // m/s — tune
         return new RunCommand(() -> {
             Pose2d robotPose = m_swerve.getPose();
             Pose2d targetPose = getTargetPose();
             ChassisSpeeds fieldSpeeds = m_swerve.getFieldSpeeds();
             double distance = m_turret.getTurretFieldPosition(robotPose).getDistance(targetPose.getTranslation());
         
-            double flywheelSpeed = m_turret.interpolateFlywheelSpeed(distance);
-            // double flywheelSpeed = m_turret.interpolateFlywheelSpeedPiecewise(distance);
+            // double flywheelSpeed = m_turret.interpolateFlywheelSpeed(distance);
+            double flywheelSpeed = m_turret.interpolateFlywheelSpeedPiecewise(distance) + 0.015;
 
             double leadAngle = MathUtil.angleModulus(
                 m_turret.calculateLeadCorrectedAngle(robotPose, targetPose, fieldSpeeds, avgBallSpeed) + Math.PI);
@@ -354,5 +356,6 @@ public class RobotContainer {
         var turretPos = m_turret.getTurretFieldPosition(m_swerve.getPose());
         SmartDashboard.putNumberArray("Turret Position",
             new double[] { turretPos.getX(), turretPos.getY(), 0 });
+        // SmartDashboard.putBoolean("Hub Active", shiftinformation.isHubActive());
     }
 }
