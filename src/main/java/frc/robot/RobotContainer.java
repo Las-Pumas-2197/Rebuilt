@@ -308,7 +308,10 @@ public class RobotContainer {
             Pose2d targetPose = getTargetPose();
             ChassisSpeeds fieldSpeeds = m_swerve.getFieldSpeeds();
             double distance = m_turret.getTurretFieldPosition(robotPose).getDistance(targetPose.getTranslation());
+        
             double flywheelSpeed = m_turret.interpolateFlywheelSpeed(distance);
+            // double flywheelSpeed = m_turret.interpolateFlywheelSpeedPiecewise(distance);
+
             double leadAngle = MathUtil.angleModulus(
                 m_turret.calculateLeadCorrectedAngle(robotPose, targetPose, fieldSpeeds, avgBallSpeed) + Math.PI);
             m_turret.turretCL(flywheelSpeed, leadAngle);
