@@ -71,6 +71,7 @@ public class RobotContainer {
     private double slideTargetPos = 0.0;
 
     private double drivespeedmult = 4;
+    private double debugFlywheelSpeed = 0.4;
 
     private boolean turretEnabled = false;
 
@@ -208,6 +209,15 @@ public class RobotContainer {
         ));
 
 
+        // flywheel speed debug — adjust with pov up/down, shoot with button 9
+        m_joystick.povUp().onTrue(runOnce(() -> debugFlywheelSpeed += 0.01));
+        m_joystick.povDown().onTrue(runOnce(() -> debugFlywheelSpeed -= 0.01));
+        m_joystick3.button(9).whileTrue(new ParallelCommandGroup(
+            runEnd(() -> m_turret.turretCL(debugFlywheelSpeed, 0),
+                () -> m_turret.turretCL(0, 0), m_turret),
+            runEnd(() -> m_feeder.runFeeder(),
+                () -> m_feeder.stopAllFeeder(), m_feeder)));
+
         // turret
         // m_joystick.rightTrigger().whileTrue(runEnd(() -> m_turret.spinUpFlywheels(), () -> m_turret.stopAllShooter(), m_turret));
 
@@ -337,6 +347,7 @@ public class RobotContainer {
         SmartDashboard.putNumberArray("Turret Target",
             new double[] { target.getX(), target.getY(), target.getRotation().getDegrees() });
         SmartDashboard.putBoolean("turret tracking", turretEnabled);
+        SmartDashboard.putNumber("Debug Flywheel Speed", debugFlywheelSpeed);
         var turretPos = m_turret.getTurretFieldPosition(m_swerve.getPose());
         SmartDashboard.putNumberArray("Turret Position",
             new double[] { turretPos.getX(), turretPos.getY(), 0 });
