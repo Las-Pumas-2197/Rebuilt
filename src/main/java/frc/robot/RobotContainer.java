@@ -46,6 +46,7 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.vision.LimelightPoseEstimator;
 import frc.robot.subsystems.vision.Vision;
+// import frc.robot.subsystems.vision.LimelightPoseEstimator;
 import frc.robot.utils.Telemetry;
 // import frc.robot.utils.ShiftInfo;
 
@@ -65,6 +66,10 @@ public class RobotContainer {
     private final Feeder m_feeder = new Feeder();
     private final Telemetry m_telemetry = new Telemetry(m_vision, m_swerve);
     private final LimelightPoseEstimator m_llestimator = new LimelightPoseEstimator("limelight", () -> m_swerve.getGyroHeading().getDegrees());
+
+    // Limelight pose estimator for turret tracking (independent of PhotonVision)
+    // private final LimelightPoseEstimator m_llPose = new LimelightPoseEstimator(
+    //     "limelight-left", "limelight-right", () -> m_swerve.getHeading().getDegrees());
 
     // Auto chooser
     private final SendableChooser<Command> m_autochooser = new SendableChooser<>();
@@ -272,6 +277,9 @@ public class RobotContainer {
         cmd.addCommands(run(() -> {
             m_vision.updateFrontCameraSlideOffset(m_hopper.getSlideExtensionFraction());
             m_swerve.addVisionMeasurements(m_vision.getEstimates());
+            // To also feed Limelight estimates into the swerve pose estimator:
+            // m_llPose.getEstimatedPose().ifPresent(pose ->
+            //     m_swerve.addVisionMeasurement(pose, m_llPose.getTimestamp(), m_llPose.getStdDevs()));
         }));
         // cmd.addCommands(run( () ->
         //     m_swerve.addVisionMeasurementsLL(m_llestimator.getEstimatedPose(), m_llestimator.getStdDevs(), m_llestimator.getTimestamp())
@@ -323,6 +331,8 @@ public class RobotContainer {
         final double avgBallSpeed = 3.0; // m/s — tune
         return new RunCommand(() -> {
             Pose2d robotPose = m_swerve.getPose();
+            // To use Limelight pose for turret tracking instead:
+            // Pose2d robotPose = m_llPose.getEstimatedPose().orElse(m_swerve.getPose());
             Pose2d targetPose = getTargetPose();
             ChassisSpeeds fieldSpeeds = m_swerve.getFieldSpeeds();
             double distance = m_turret.getTurretFieldPosition(robotPose).getDistance(targetPose.getTranslation());
