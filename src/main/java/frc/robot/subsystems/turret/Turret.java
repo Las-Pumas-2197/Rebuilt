@@ -58,7 +58,7 @@ public class Turret extends SubsystemBase {
   private static final double FLYWHEEL_IDLE_SPEED = 0.3;
 
   // Current limits
-  private static final int FLYWHEEL_CURRENT_LIMIT = 60;
+  private static final int FLYWHEEL_CURRENT_LIMIT = 40;
   private static final int ROTATION_CURRENT_LIMIT = 40;
 
   // Gear ratio: 10 motor rotations per 1 turret rotation

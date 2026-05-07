@@ -165,6 +165,13 @@ public class Swerve extends SubsystemBase {
     }
   }
 
+    /** Adds the current queue of vision measurements to the pose estimator. */
+  public void addVisionMeasurementsLL(Optional<Pose2d> estimate, Matrix<N3, N1> stddevs, double timestamp) {
+    estimate.ifPresent(est -> {
+      m_swervedrive.addVisionMeasurement(est, timestamp, stddevs);
+    });
+  }
+
   /** Pathfinds to a specifed pose.
    *
    * @param targetpose The pose to pathfind to.

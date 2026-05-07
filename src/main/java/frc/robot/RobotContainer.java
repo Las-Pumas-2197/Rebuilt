@@ -44,16 +44,17 @@ import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.vision.LimelightPoseEstimator;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.utils.Telemetry;
-import frc.robot.utils.shiftinfo;
+// import frc.robot.utils.ShiftInfo;
 
 public class RobotContainer {
 
     // Controllers
     private final CommandXboxController m_joystick = new CommandXboxController(k_joystickport);
     // private final CommandXboxController m_joystick2 = new CommandXboxController(1);
-    private final CommandGenericHID m_joystick3 = new CommandGenericHID(2);
+    private final CommandGenericHID m_joystick3 = new CommandGenericHID(1);
 
     // Subsystems
     private final Vision m_vision = new Vision();
@@ -63,6 +64,7 @@ public class RobotContainer {
     private final Turret m_turret = new Turret();
     private final Feeder m_feeder = new Feeder();
     private final Telemetry m_telemetry = new Telemetry(m_vision, m_swerve);
+    private final LimelightPoseEstimator m_llestimator = new LimelightPoseEstimator("limelight", () -> m_swerve.getGyroHeading().getDegrees());
 
     // Auto chooser
     private final SendableChooser<Command> m_autochooser = new SendableChooser<>();
@@ -124,6 +126,8 @@ public class RobotContainer {
         m_autochooser.addOption("Left to Center to Trench", AutoBuilder.buildAuto("Left to Center to Trench"));
         m_autochooser.addOption("Left Anti Superduper", AutoBuilder.buildAuto("Left Anti Superduper"));
         m_autochooser.addOption("Middle to Depot", AutoBuilder.buildAuto("Middle to Depot"));
+        m_autochooser.addOption("Left Quick Double", AutoBuilder.buildAuto("Left Quick Double"));
+   
         // m_autochooser.addOption("Left to Center to Depot", AutoBuilder.buildAuto("Left to Center to Depot"));
 
         // m_autochooser.addOption("Simtest", AutoBuilder.buildAuto("SimTest"));
@@ -182,16 +186,25 @@ public class RobotContainer {
         // m_joystick2.back().onTrue(runOnce(() -> turretTargetVel = 0));
         // new Trigger(() -> this.hasAimInput()).whileTrue(runEnd(() -> turretTargetPos = this.getAimHeading(), () -> turretTargetPos = 0));
 
+
+
+
         m_joystick3.button(3).toggleOnTrue(new ParallelCommandGroup(
             turretTrackHubLeadCommand(),
             runEnd(() -> turretEnabled = true, () -> turretEnabled = false)
         ));
-        m_joystick3.button(4).toggleOnTrue(new ParallelCommandGroup(
-            turretTrackHubLeadCommand(),
-            waitSeconds(1).andThen(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder),
-            runEnd(() -> turretEnabled = true, () -> turretEnabled = false)
-)
-        ));
+        // m_joystick3.button(4).toggleOnTrue(new ParallelCommandGroup(
+        //     turretTrackHubLeadCommand(),
+        //     waitSeconds(1).andThen(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder),
+        //     runEnd(() -> turretEnabled = true, () -> turretEnabled = false))
+        // ));
+
+        // m_joystick3.button(3).toggleOnTrue(runEnd(() -> turretTargetVel = 0.55, () -> turretTargetVel = 0));
+        m_joystick3.button(9).toggleOnTrue(
+            parallel(
+                runEnd(() -> turretTargetVel = 0.55, () -> turretTargetVel = 0),
+                waitSeconds(1).andThen(runEnd(() -> m_feeder.runFeeder(), () -> m_feeder.stopAllFeeder(), m_feeder))
+            ));
 
         m_joystick.leftBumper().whileTrue(runEnd(() -> drivespeedmult = 1, () -> drivespeedmult = k_maxlinspeedteleop));
         m_joystick.rightBumper().whileTrue(runEnd(() -> drivespeedmult = k_maxlinspeedturbo, () -> drivespeedmult = k_maxlinspeedteleop));
@@ -207,7 +220,7 @@ public class RobotContainer {
         m_joystick3.button(6).onTrue(runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[1]));
         m_joystick3.button(7).whileTrue(sequence(
             runOnce(() -> slideTargetPos = m_hopper.getPositionSetpoints()[2]),
-            runEnd(() -> m_intake.runEject(), () -> m_intake.stopRoller(), m_intake)
+            runEnd(() -> m_intake.runIntake(), () -> m_intake.stopRoller(), m_intake)
         ));
 
 
@@ -260,6 +273,9 @@ public class RobotContainer {
             m_vision.updateFrontCameraSlideOffset(m_hopper.getSlideExtensionFraction());
             m_swerve.addVisionMeasurements(m_vision.getEstimates());
         }));
+        // cmd.addCommands(run( () ->
+        //     m_swerve.addVisionMeasurementsLL(m_llestimator.getEstimatedPose(), m_llestimator.getStdDevs(), m_llestimator.getTimestamp())
+        // ));
         cmd.addRequirements(m_vision);
         return cmd;
     }
@@ -304,7 +320,7 @@ public class RobotContainer {
     }
 
     private Command turretTrackHubLeadCommand() {
-        final double avgBallSpeed = 2.0; // m/s — tune
+        final double avgBallSpeed = 3.0; // m/s — tune
         return new RunCommand(() -> {
             Pose2d robotPose = m_swerve.getPose();
             Pose2d targetPose = getTargetPose();

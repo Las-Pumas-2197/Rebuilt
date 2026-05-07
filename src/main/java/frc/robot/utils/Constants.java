@@ -171,7 +171,7 @@ public final class Constants {
             Units.inchesToMeters(-9.75),
             Units.inchesToMeters(-14.75),
             Units.inchesToMeters(6.5),
-            new Rotation3d(0, Units.degreesToRadians(-20), Units.degreesToRadians(-135)))
+            new Rotation3d(0, Units.degreesToRadians(-30), Units.degreesToRadians(-135)))
     );
 
     // Camera names
